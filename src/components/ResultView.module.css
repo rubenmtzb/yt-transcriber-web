@@ -1,0 +1,127 @@
+.container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: var(--space-5);
+  text-align: left;
+  align-items: start;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: sticky;
+  top: var(--space-4);
+}
+
+.eyebrow {
+  color: var(--color-accent-1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: var(--space-1);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.actionsLabel {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-1);
+}
+
+.actions button {
+  text-align: left;
+  padding: var(--space-2) 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.actions button:hover {
+  color: var(--color-text);
+}
+
+.feedback {
+  min-height: 1.2em;
+  color: var(--color-success);
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.feedback[data-visible="true"] {
+  opacity: 1;
+}
+
+.reset {
+  align-self: flex-start;
+  color: var(--color-accent-1);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  min-width: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  padding: var(--space-2) 0;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab[data-active="true"] {
+  color: var(--color-text);
+  border-bottom-color: var(--color-accent-1);
+}
+
+@media (max-width: 800px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .actions button {
+    padding: var(--space-1) 0;
+  }
+}
