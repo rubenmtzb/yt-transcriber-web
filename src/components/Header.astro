@@ -1,0 +1,57 @@
+---
+const links = [
+  { href: "/como-funciona", label: "Cómo funciona" },
+  { href: "/privacidad", label: "Privacidad" },
+];
+---
+
+<header class="header">
+  <a href="/" class="logo" aria-label="YT Transcriber — inicio">
+    <img src="/logo.png" alt="" width="160" height="133" />
+  </a>
+  <nav class="nav">
+    {links.map((link) => <a href={link.href}>{link.label}</a>)}
+  </nav>
+</header>
+
+<style>
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+  }
+
+  .logo img {
+    height: 40px;
+    width: auto;
+  }
+
+  .nav {
+    display: flex;
+    gap: var(--space-4);
+  }
+
+  .nav a {
+    text-decoration: none;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .nav a:hover {
+    color: var(--color-text);
+  }
+
+  @media (max-width: 640px) {
+    .header {
+      padding: var(--space-3);
+    }
+  }
+</style>
