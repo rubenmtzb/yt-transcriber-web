@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+---
+
+<BaseLayout title="Cómo funciona — YT Transcriber">
+  <Header />
+  <main class="content">
+    <h1>Cómo funciona</h1>
+    <ol>
+      <li>Pegas la URL de un vídeo público de YouTube.</li>
+      <li>Eliges el idioma al que quieres traducir el resultado.</li>
+      <li>Sacamos los subtítulos disponibles del vídeo (por ahora, en inglés) y los traducimos con DeepL.</li>
+      <li>Te devolvemos el resultado con marcas de tiempo, listo para copiar.</li>
+    </ol>
+    <p>
+      Todo el proceso es síncrono: la petición tarda lo que tarde en resolverse (normalmente unos segundos) y no se
+      guarda nada en el servidor una vez respondida.
+    </p>
+    <h2>Límites</h2>
+    <ul>
+      <li>Vídeos de hasta 20 minutos.</li>
+      <li>Un número limitado de transcripciones por hora.</li>
+      <li>El idioma de origen soportado por ahora es el inglés.</li>
+    </ul>
+  </main>
+</BaseLayout>
+
+<style>
+  .content {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    margin-top: var(--space-3);
+  }
+
+  ol,
+  ul,
+  p {
+    color: var(--color-text-muted);
+    line-height: 1.7;
+  }
+</style>

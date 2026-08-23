@@ -1,0 +1,43 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+---
+
+<BaseLayout title="Privacidad — YT Transcriber">
+  <Header />
+  <main class="content">
+    <h1>Privacidad</h1>
+    <p>
+      YT Transcriber no requiere registro ni cuenta. No guardamos el vídeo, el audio, la transcripción ni la
+      traducción una vez que la respuesta llega a tu navegador.
+    </p>
+    <p>
+      No usamos cookies de seguimiento. La única cookie prevista es una de sesión anónima para controlar el uso por
+      sesión y evitar abuso del servicio — no identifica quién eres.
+    </p>
+    <p>
+      Como en cualquier servicio web, quedan registros técnicos mínimos (por ejemplo, la IP de la petición) usados
+      solo para prevenir abuso, nunca para construir un perfil.
+    </p>
+  </main>
+</BaseLayout>
+
+<style>
+  .content {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  p {
+    color: var(--color-text-muted);
+    line-height: 1.7;
+  }
+</style>
