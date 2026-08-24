@@ -30,6 +30,7 @@ export type ErrorCode =
   | "VIDEO_TOO_LONG"
   | "RATE_LIMITED"
   | "PROVIDER_UNAVAILABLE"
+  | "TRANSLATION_QUOTA_EXCEEDED"
   | "INTERNAL_ERROR";
 
 export interface ErrorResponseDto {

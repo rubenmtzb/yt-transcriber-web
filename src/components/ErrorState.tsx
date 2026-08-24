@@ -39,6 +39,13 @@ const ERROR_INFO: Record<ErrorCode, ErrorInfo> = {
     action: "Reintentar",
     tone: "danger",
   },
+  TRANSLATION_QUOTA_EXCEEDED: {
+    title: "Cuota de traducción agotada",
+    description:
+      "Este demo usa un plan de traducción gratuito y compartido. Se ha agotado por este mes — vuelve a intentarlo más adelante.",
+    action: "Entendido",
+    tone: "warning",
+  },
   INTERNAL_ERROR: {
     title: "Algo ha ido mal",
     description: "Ha ocurrido un error inesperado en el servidor.",
