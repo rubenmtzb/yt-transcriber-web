@@ -1,37 +1,32 @@
-import { useEffect, useState } from "react";
+import type { ProcessingStage } from "../types/api";
 import styles from "./ProcessingState.module.css";
 
-const STEPS = [
-  "Validando URL",
-  "Obteniendo información",
-  "Transcribiendo audio",
-  "Traduciendo contenido",
-  "Preparando resultado",
+const STEPS: { stage: ProcessingStage; label: string }[] = [
+  { stage: "VALIDATING_URL", label: "Validando URL" },
+  { stage: "RESOLVING_VIDEO", label: "Obteniendo información" },
+  { stage: "TRANSCRIBING", label: "Transcribiendo audio" },
+  { stage: "TRANSLATING", label: "Traduciendo contenido" },
+  { stage: "PREPARING_RESULT", label: "Preparando resultado" },
 ];
 
-const STEP_INTERVAL_MS = 1800;
+interface ProcessingStateProps {
+  stage: ProcessingStage | null;
+}
 
-export default function ProcessingState() {
-  const [activeStep, setActiveStep] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveStep((current) => Math.min(current + 1, STEPS.length - 1));
-    }, STEP_INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, []);
+export default function ProcessingState({ stage }: ProcessingStateProps) {
+  const activeIndex = stage ? STEPS.findIndex((step) => step.stage === stage) : -1;
 
   return (
     <div className={styles.container} role="status" aria-live="polite">
       <ul className={styles.steps}>
         {STEPS.map((step, index) => (
           <li
-            key={step}
+            key={step.stage}
             className={styles.step}
-            data-state={index < activeStep ? "done" : index === activeStep ? "active" : "pending"}
+            data-state={index < activeIndex ? "done" : index === activeIndex ? "active" : "pending"}
           >
             <span className={styles.dot} />
-            {step}
+            {step.label}
           </li>
         ))}
       </ul>

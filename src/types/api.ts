@@ -24,6 +24,13 @@ export interface TranscriptionRequestDto {
   targetLanguage: string;
 }
 
+export type ProcessingStage =
+  | "VALIDATING_URL"
+  | "RESOLVING_VIDEO"
+  | "TRANSCRIBING"
+  | "TRANSLATING"
+  | "PREPARING_RESULT";
+
 export type ErrorCode =
   | "INVALID_REQUEST"
   | "UNSUPPORTED_SOURCE"

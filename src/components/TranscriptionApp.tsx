@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import UrlForm from "./UrlForm";
 import ProcessingState from "./ProcessingState";
 import ErrorState from "./ErrorState";
 import ResultView from "./ResultView";
-import { createTranscription, ApiError } from "../services/api";
-import type { ErrorCode, TranscriptionResponseDto } from "../types/api";
+import { createTranscriptionStream, ApiError } from "../services/api";
+import type { ErrorCode, ProcessingStage, TranscriptionResponseDto } from "../types/api";
 import styles from "./TranscriptionApp.module.css";
 
 type Phase = "idle" | "processing" | "success" | "error";
@@ -19,23 +19,35 @@ export default function TranscriptionApp() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<TranscriptionResponseDto | null>(null);
   const [errorCode, setErrorCode] = useState<ErrorCode>("INTERNAL_ERROR");
+  const [stage, setStage] = useState<ProcessingStage | null>(null);
+  const closeStreamRef = useRef<(() => void) | null>(null);
 
-  async function handleSubmit(youtubeUrl: string, targetLanguage: string) {
+  function handleSubmit(youtubeUrl: string, targetLanguage: string) {
+    closeStreamRef.current?.();
     setPhase("processing");
+    setStage("VALIDATING_URL");
 
-    try {
-      const response = await createTranscription({ youtubeUrl, targetLanguage });
-      setResult(response);
-      setPhase("success");
-    } catch (err) {
-      setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
-      setPhase("error");
-    }
+    closeStreamRef.current = createTranscriptionStream(
+      { youtubeUrl, targetLanguage },
+      {
+        onStage: setStage,
+        onResult: (response) => {
+          setResult(response);
+          setPhase("success");
+        },
+        onError: (err) => {
+          setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
+          setPhase("error");
+        },
+      },
+    );
   }
 
   function reset() {
+    closeStreamRef.current?.();
     setPhase("idle");
     setResult(null);
+    setStage(null);
   }
 
   return (
@@ -51,7 +63,7 @@ export default function TranscriptionApp() {
 
       {phase !== "success" && <UrlForm onSubmit={handleSubmit} disabled={phase === "processing"} />}
 
-      {phase === "processing" && <ProcessingState />}
+      {phase === "processing" && <ProcessingState stage={stage} />}
       {phase === "error" && <ErrorState code={errorCode} onDismiss={reset} />}
       {phase === "success" && result && <ResultView result={result} onReset={reset} />}
 
