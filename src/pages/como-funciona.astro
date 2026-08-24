@@ -10,7 +10,7 @@ import Header from "../components/Header.astro";
     <ol>
       <li>Pegas la URL de un vídeo público de YouTube.</li>
       <li>Eliges el idioma al que quieres traducir el resultado.</li>
-      <li>Sacamos los subtítulos disponibles del vídeo (por ahora, en inglés) y los traducimos con DeepL.</li>
+      <li>Sacamos los subtítulos disponibles del vídeo, en el idioma en el que estén, y los traducimos con DeepL.</li>
       <li>Te devolvemos el resultado con marcas de tiempo, listo para copiar.</li>
     </ol>
     <p>
@@ -21,7 +21,7 @@ import Header from "../components/Header.astro";
     <ul>
       <li>Vídeos de hasta 20 minutos.</li>
       <li>Un número limitado de transcripciones por hora.</li>
-      <li>El idioma de origen soportado por ahora es el inglés.</li>
+      <li>El vídeo debe tener subtítulos ya disponibles en algún idioma (manuales o automáticos) — todavía no generamos transcripción desde cero si no hay ninguno.</li>
       <li>
         La traducción usa el plan gratuito de DeepL, compartido por todas las personas que usan este demo — no es un
         servicio de producción con capacidad ilimitada. Si se agota la cuota mensual, la traducción se pausa hasta
