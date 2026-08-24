@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import SegmentList from "../src/components/SegmentList";
@@ -35,5 +35,28 @@ describe("SegmentList", () => {
     await user.type(screen.getByPlaceholderText("Buscar..."), "xyzxyz");
 
     expect(screen.getByText(/sin resultados/i)).toBeInTheDocument();
+  });
+
+  it("calls onSegmentClick with the clicked segment", async () => {
+    const user = userEvent.setup();
+    const onSegmentClick = vi.fn();
+    render(
+      <SegmentList
+        segments={SEGMENTS}
+        field="translatedText"
+        searchPlaceholder="Buscar..."
+        onSegmentClick={onSegmentClick}
+      />,
+    );
+
+    await user.click(screen.getByText("Cómo estás"));
+
+    expect(onSegmentClick).toHaveBeenCalledExactlyOnceWith(SEGMENTS[1]);
+  });
+
+  it("renders rows as disabled, non-clickable buttons when no onSegmentClick is given", () => {
+    render(<SegmentList segments={SEGMENTS} field="translatedText" searchPlaceholder="Buscar..." />);
+
+    screen.getAllByRole("button").forEach((button) => expect(button).toBeDisabled());
   });
 });

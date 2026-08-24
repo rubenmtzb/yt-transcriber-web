@@ -1,7 +1,8 @@
-import { useState } from "react";
-import type { TranscriptionResponseDto } from "../types/api";
+import { useRef, useState } from "react";
+import type { SegmentDto, TranscriptionResponseDto } from "../types/api";
 import TranscriptViewer from "./TranscriptViewer";
 import TranslationViewer from "./TranslationViewer";
+import VideoPlayer, { type VideoPlayerHandle } from "./VideoPlayer";
 import { toPlainText, toSrt, downloadTextFile } from "../lib/segments";
 import styles from "./ResultView.module.css";
 
@@ -15,6 +16,7 @@ type Tab = "transcript" | "translation";
 export default function ResultView({ result, onReset }: ResultViewProps) {
   const [tab, setTab] = useState<Tab>("transcript");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const playerRef = useRef<VideoPlayerHandle>(null);
 
   async function copy(text: string, message: string) {
     await navigator.clipboard.writeText(text);
@@ -22,9 +24,15 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
     setTimeout(() => setFeedback(null), 2000);
   }
 
+  function jumpToSegment(segment: SegmentDto) {
+    playerRef.current?.seekTo(segment.startMs);
+  }
+
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar}>
+        <VideoPlayer videoId={result.video.id} ref={playerRef} />
+
         <div>
           <p className={styles.eyebrow}>Vídeo</p>
           <h2 className={styles.title}>{result.video.title}</h2>
@@ -86,9 +94,9 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
         </div>
 
         {tab === "transcript" ? (
-          <TranscriptViewer segments={result.segments} />
+          <TranscriptViewer segments={result.segments} onSegmentClick={jumpToSegment} />
         ) : (
-          <TranslationViewer segments={result.segments} />
+          <TranslationViewer segments={result.segments} onSegmentClick={jumpToSegment} />
         )}
       </section>
     </div>

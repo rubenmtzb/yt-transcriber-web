@@ -7,9 +7,10 @@ interface SegmentListProps {
   segments: SegmentDto[];
   field: "sourceText" | "translatedText";
   searchPlaceholder: string;
+  onSegmentClick?: (segment: SegmentDto) => void;
 }
 
-export default function SegmentList({ segments, field, searchPlaceholder }: SegmentListProps) {
+export default function SegmentList({ segments, field, searchPlaceholder, onSegmentClick }: SegmentListProps) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
@@ -33,8 +34,15 @@ export default function SegmentList({ segments, field, searchPlaceholder }: Segm
       <ul className={styles.list}>
         {filtered.map((segment) => (
           <li key={segment.sequence} className={styles.row}>
-            <span className={styles.timestamp}>{formatTimestamp(segment.startMs)}</span>
-            <span className={styles.text}>{segment[field]}</span>
+            <button
+              type="button"
+              className={styles.rowButton}
+              onClick={() => onSegmentClick?.(segment)}
+              disabled={!onSegmentClick}
+            >
+              <span className={styles.timestamp}>{formatTimestamp(segment.startMs)}</span>
+              <span className={styles.text}>{segment[field]}</span>
+            </button>
           </li>
         ))}
         {filtered.length === 0 && <li className={styles.empty}>Sin resultados para "{query}".</li>}

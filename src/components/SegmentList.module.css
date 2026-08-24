@@ -28,10 +28,24 @@
 }
 
 .row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rowButton {
   display: flex;
+  width: 100%;
   gap: var(--space-3);
   padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rowButton:disabled {
+  cursor: text;
+}
+
+.rowButton:not(:disabled):hover .text {
+  color: var(--color-accent-1);
 }
 
 .timestamp {
