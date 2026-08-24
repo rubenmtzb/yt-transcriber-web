@@ -17,7 +17,7 @@ const ERROR_INFO: Record<ErrorCode, ErrorInfo> = {
   },
   UNSUPPORTED_SOURCE: {
     title: "Este vídeo no se puede procesar",
-    description: "Puede ser privado, estar en directo, o no tener subtítulos en inglés todavía.",
+    description: "Puede ser privado, estar en directo, durar muy poco, o no contener voz detectable.",
     action: "Probar con otro vídeo",
     tone: "warning",
   },
