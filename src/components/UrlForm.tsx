@@ -5,6 +5,8 @@ import styles from "./UrlForm.module.css";
 interface UrlFormProps {
   onSubmit: (youtubeUrl: string, targetLanguage: string) => void;
   disabled?: boolean;
+  initialUrl?: string;
+  initialTargetLanguage?: string;
 }
 
 // Keep this in sync with TranscriptionRequestDto's @Pattern in the backend — deliberately
@@ -12,9 +14,9 @@ interface UrlFormProps {
 // a URL actually resolves to a usable video.
 const YOUTUBE_URL_PATTERN = /^https?:\/\/(www\.|m\.|music\.)?(youtube\.com\/|youtu\.be\/).+$/;
 
-export default function UrlForm({ onSubmit, disabled = false }: UrlFormProps) {
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [targetLanguage, setTargetLanguage] = useState("es");
+export default function UrlForm({ onSubmit, disabled = false, initialUrl = "", initialTargetLanguage = "es" }: UrlFormProps) {
+  const [youtubeUrl, setYoutubeUrl] = useState(initialUrl);
+  const [targetLanguage, setTargetLanguage] = useState(initialTargetLanguage);
   const [validationError, setValidationError] = useState<string | null>(null);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
