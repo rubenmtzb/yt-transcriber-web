@@ -1,7 +1,7 @@
 import type { SegmentDto } from "../types/api";
 import SegmentList from "./SegmentList";
 
-interface TranscriptViewerProps {
+interface DualViewerProps {
   segments: SegmentDto[];
   onSegmentClick?: (segment: SegmentDto) => void;
   activeSequence?: number | null;
@@ -11,6 +11,6 @@ interface TranscriptViewerProps {
   onShareQuote?: (segment: SegmentDto) => void;
 }
 
-export default function TranscriptViewer(props: TranscriptViewerProps) {
-  return <SegmentList {...props} mode="source" searchPlaceholder="Buscar en el texto..." />;
+export default function DualViewer(props: DualViewerProps) {
+  return <SegmentList {...props} mode="dual" searchPlaceholder="Buscar en el texto o la traducción..." />;
 }

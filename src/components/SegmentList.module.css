@@ -28,14 +28,43 @@
 }
 
 .row {
+  display: flex;
+  align-items: center;
   border-bottom: 1px solid var(--color-border);
+  border-left: 2px solid transparent;
+  transition: background-color 0.2s ease, border-left-color 0.2s ease;
+}
+
+.row[data-active="true"] {
+  background: rgba(177, 74, 237, 0.12);
+  border-left-color: var(--color-accent-1);
+  animation: segment-pop 0.25s ease;
+}
+
+@keyframes segment-pop {
+  from {
+    background: rgba(177, 74, 237, 0.32);
+  }
+  to {
+    background: rgba(177, 74, 237, 0.12);
+  }
+}
+
+.row[data-active="true"] .timestamp {
+  color: var(--color-accent-1);
+}
+
+.row[data-active="true"] .text {
+  color: var(--color-text);
+  font-weight: 600;
 }
 
 .rowButton {
   display: flex;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   gap: var(--space-3);
-  padding: var(--space-2) 0;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
   text-align: left;
   cursor: pointer;
 }
@@ -61,6 +90,46 @@
   color: var(--color-text);
   line-height: 1.6;
   white-space: pre-line;
+}
+
+.dualText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.textTranslated {
+  color: var(--color-text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.rowActions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding-right: var(--space-2);
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--color-text-muted);
+}
+
+.actionButton:hover {
+  background: var(--color-accent-2);
+  color: var(--color-text);
+}
+
+.actionButton[data-active="true"] {
+  color: var(--color-accent-1);
 }
 
 .empty {

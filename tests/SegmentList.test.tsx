@@ -10,8 +10,8 @@ const SEGMENTS: SegmentDto[] = [
 ];
 
 describe("SegmentList", () => {
-  it("renders every segment's timestamp and text for the given field", () => {
-    render(<SegmentList segments={SEGMENTS} field="translatedText" searchPlaceholder="Buscar..." />);
+  it("renders every segment's timestamp and text for the given mode", () => {
+    render(<SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
 
     expect(screen.getByText("Hola a todos")).toBeInTheDocument();
     expect(screen.getByText("Cómo estás")).toBeInTheDocument();
@@ -20,7 +20,7 @@ describe("SegmentList", () => {
 
   it("filters to matching segments as the user types, case-insensitively", async () => {
     const user = userEvent.setup();
-    render(<SegmentList segments={SEGMENTS} field="translatedText" searchPlaceholder="Buscar..." />);
+    render(<SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
 
     await user.type(screen.getByPlaceholderText("Buscar..."), "COMO");
 
@@ -30,7 +30,7 @@ describe("SegmentList", () => {
 
   it("shows an empty-state message when nothing matches", async () => {
     const user = userEvent.setup();
-    render(<SegmentList segments={SEGMENTS} field="translatedText" searchPlaceholder="Buscar..." />);
+    render(<SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
 
     await user.type(screen.getByPlaceholderText("Buscar..."), "xyzxyz");
 
@@ -43,7 +43,7 @@ describe("SegmentList", () => {
     render(
       <SegmentList
         segments={SEGMENTS}
-        field="translatedText"
+        mode="translated"
         searchPlaceholder="Buscar..."
         onSegmentClick={onSegmentClick}
       />,
@@ -54,9 +54,10 @@ describe("SegmentList", () => {
     expect(onSegmentClick).toHaveBeenCalledExactlyOnceWith(SEGMENTS[1]);
   });
 
-  it("renders rows as disabled, non-clickable buttons when no onSegmentClick is given", () => {
-    render(<SegmentList segments={SEGMENTS} field="translatedText" searchPlaceholder="Buscar..." />);
+  it("renders the seek buttons as disabled, non-clickable when no onSegmentClick is given", () => {
+    render(<SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
 
-    screen.getAllByRole("button").forEach((button) => expect(button).toBeDisabled());
+    expect(screen.getByText("Hola a todos").closest("button")).toBeDisabled();
+    expect(screen.getByText("Cómo estás").closest("button")).toBeDisabled();
   });
 });
