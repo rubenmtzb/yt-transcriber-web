@@ -1,4 +1,12 @@
 .wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.frame {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-md);
@@ -10,4 +18,111 @@
 .player {
   width: 100%;
   height: 100%;
+  pointer-events: none;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+}
+
+.controls[data-disabled="true"] {
+  opacity: 0.5;
+}
+
+.iconButton {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--color-text);
+}
+
+.iconButton:hover:not(:disabled) {
+  background: var(--color-accent-2);
+}
+
+.iconButton:disabled {
+  cursor: not-allowed;
+}
+
+.time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.speedButton {
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.speedButton:hover:not(:disabled) {
+  border-color: var(--color-accent-1);
+  color: var(--color-text);
+}
+
+.speedButton:disabled {
+  cursor: not-allowed;
+}
+
+.progress {
+  flex: 1;
+  min-width: 24px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-border);
+  cursor: pointer;
+}
+
+.progress:disabled {
+  cursor: not-allowed;
+}
+
+.progress::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-accent-1);
+  border: none;
+}
+
+.progress::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-accent-1);
+  border: none;
+}
+
+.progress::-moz-range-progress {
+  background: var(--color-accent-1);
+  height: 4px;
+  border-radius: 999px;
+}
+
+@media (max-width: 360px) {
+  .time {
+    display: none;
+  }
 }
