@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { SegmentDto, TranscriptionResponseDto } from "../types/api";
 import TranscriptViewer from "./TranscriptViewer";
 import TranslationViewer from "./TranslationViewer";
@@ -13,15 +13,41 @@ interface ResultViewProps {
 
 type Tab = "transcript" | "translation";
 
+const FEEDBACK_TIMEOUT_MS = 2000;
+
 export default function ResultView({ result, onReset }: ResultViewProps) {
   const [tab, setTab] = useState<Tab>("transcript");
   const [feedback, setFeedback] = useState<string | null>(null);
   const playerRef = useRef<VideoPlayerHandle>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showFeedback(message: string) {
+    // Restart the countdown on every message, otherwise a timer left over from a previous click
+    // clears the new one early.
+    if (feedbackTimeoutRef.current !== null) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    setFeedback(message);
+    feedbackTimeoutRef.current = setTimeout(() => setFeedback(null), FEEDBACK_TIMEOUT_MS);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current !== null) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   async function copy(text: string, message: string) {
-    await navigator.clipboard.writeText(text);
-    setFeedback(message);
-    setTimeout(() => setFeedback(null), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      showFeedback(message);
+    } catch {
+      // The Clipboard API rejects outside a secure context or when the user denies permission.
+      // Downloading still works, so say so instead of failing silently.
+      showFeedback("No se pudo copiar. Usa la descarga.");
+    }
   }
 
   function jumpToSegment(segment: SegmentDto) {
