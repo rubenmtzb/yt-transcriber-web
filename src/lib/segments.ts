@@ -41,12 +41,15 @@ export function foldForSearch(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(COMBINING_DIACRITICS, "");
 }
 
-export function downloadTextFile(content: string, filename: string): void {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+export function downloadTextFile(content: string, filename: string): void {
+  downloadBlob(new Blob([content], { type: "text/plain;charset=utf-8" }), filename);
 }
