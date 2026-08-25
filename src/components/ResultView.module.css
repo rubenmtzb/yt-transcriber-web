@@ -1,7 +1,10 @@
 .container {
   width: 100%;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  /* 320px, not the 240px this started at: below roughly 300px YouTube's own player chrome
+     (play button, progress bar, CC and volume controls) collapses on top of the video title
+     instead of laying out in a row. This is the narrowest column that still renders it cleanly. */
+  grid-template-columns: 320px 1fr;
   gap: var(--space-5);
   text-align: left;
   align-items: start;
@@ -113,6 +116,12 @@
     flex-direction: row;
     flex-wrap: wrap;
     gap: var(--space-4);
+  }
+
+  /* The sidebar turns into a wrapping row here; without an explicit basis the player would be
+     sized by its (empty) content and collapse. */
+  .sidebar > :first-child {
+    flex: 1 1 100%;
   }
 
   .actions {
