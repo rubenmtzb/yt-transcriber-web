@@ -8,18 +8,14 @@ A single-page, no-login web app. It talks to `yt-transcriber-api` over a plain J
 
 ## Features
 
-**Implemented**
-
-- Project scaffold (Astro + React + TypeScript), design tokens, base layout.
-- Typed API client (`src/services/api.ts`) matching the backend's request/response/error contract exactly.
-
-**Planned**
-
-- Home/Landing screen (URL input, language select, trust badges).
-- Processing screen (step-by-step progress).
-- Result screen (transcript/translation tabs, copy/download actions).
-- Error states mapped from the backend's error envelope.
-- Responsive layout (desktop/tablet/mobile).
+- Landing screen: URL input with client-side validation, target-language select, trust badges.
+- Live progress: the backend streams its stage over SSE, shown as a step-by-step checklist.
+- Result screen: transcript/translation tabs, per-segment search (accent-insensitive), copy to
+  clipboard and `.txt` / `.srt` download.
+- Embedded player: click any segment to jump to that moment, and the segment being spoken is
+  highlighted and kept in view as the video plays.
+- Error states mapped one-to-one from the backend's error envelope.
+- Responsive layout (desktop/tablet/mobile) and a reduced-motion path throughout.
 
 ## Architecture
 
@@ -46,6 +42,7 @@ Astro renders the static shell; React is used only for the interactive parts (th
 npm install
 npm run dev       # http://localhost:4321
 npm run check     # type-check
+npm run test      # unit + component tests
 npm run build     # static output to dist/
 ```
 
@@ -70,13 +67,24 @@ Copy `.env.example` to `.env`:
 
 ```text
 src/
-  components/     UrlForm, LanguageSelect, ProcessingState, TranscriptViewer, TranslationViewer, ErrorState (React)
+  components/     React islands (TranscriptionApp orchestrates the phases; UrlForm,
+                  ProcessingState, ErrorState, ResultView, VideoPlayer, SegmentList) plus the
+                  static Header/Footer Astro partials. Styles live next to each component as
+                  a *.module.css file.
   layouts/        BaseLayout.astro
-  pages/          index.astro
-  services/       api.ts — typed fetch client
+  pages/          index.astro, como-funciona.astro, privacidad.astro
+  services/       api.ts — SSE client for the transcription stream
+  lib/            segments.ts — pure segment helpers (formatting, SRT, search folding,
+                  active-segment lookup); unit-tested in isolation
   types/          api.ts — request/response/error DTOs, matching the backend exactly
+                  youtube.d.ts — minimal typings for the YouTube IFrame Player API
   styles/         global.css — design tokens (colors, spacing) and reset
+tests/            Vitest + Testing Library, mirroring src/
 ```
+
+State lives in `TranscriptionApp` as a single `phase` (`idle` → `processing` → `success` |
+`error`); every other component is driven by props, which keeps the interactive surface
+testable without mounting the whole app.
 
 ## Related Repository
 
