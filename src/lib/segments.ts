@@ -44,6 +44,34 @@ export function foldForSearch(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(COMBINING_DIACRITICS, "");
 }
 
+/**
+ * Returns the `sequence` of the segment covering `currentMs`, or null when playback sits in a
+ * gap between segments (silence, intros) or past the last one.
+ *
+ * Binary search rather than a linear scan: this runs on every playback tick, and a long video
+ * can carry a few thousand segments. Assumes segments are sorted by `startMs`, which is the
+ * order the backend emits them in.
+ */
+export function findActiveSegmentSequence(segments: SegmentDto[], currentMs: number): number | null {
+  let low = 0;
+  let high = segments.length - 1;
+  let candidate: SegmentDto | null = null;
+
+  while (low <= high) {
+    const mid = (low + high) >>> 1;
+    const segment = segments[mid];
+    if (segment.startMs <= currentMs) {
+      candidate = segment;
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  // The nearest segment that has already started still has to be one that hasn't ended yet.
+  return candidate !== null && currentMs < candidate.endMs ? candidate.sequence : null;
+}
+
 export function downloadTextFile(content: string, filename: string): void {
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);

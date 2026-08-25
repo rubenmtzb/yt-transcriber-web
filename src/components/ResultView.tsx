@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { SegmentDto, TranscriptionResponseDto } from "../types/api";
 import TranscriptViewer from "./TranscriptViewer";
 import TranslationViewer from "./TranslationViewer";
 import VideoPlayer, { type VideoPlayerHandle } from "./VideoPlayer";
-import { toPlainText, toSrt, downloadTextFile } from "../lib/segments";
+import { findActiveSegmentSequence, toPlainText, toSrt, downloadTextFile } from "../lib/segments";
 import styles from "./ResultView.module.css";
 
 interface ResultViewProps {
@@ -18,8 +18,11 @@ const FEEDBACK_TIMEOUT_MS = 2000;
 export default function ResultView({ result, onReset }: ResultViewProps) {
   const [tab, setTab] = useState<Tab>("transcript");
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [activeSequence, setActiveSequence] = useState<number | null>(null);
   const playerRef = useRef<VideoPlayerHandle>(null);
   const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const segments = result.segments;
 
   function showFeedback(message: string) {
     // Restart the countdown on every message, otherwise a timer left over from a previous click
@@ -54,10 +57,20 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
     playerRef.current?.seekTo(segment.startMs);
   }
 
+  // Store the active segment rather than the raw playback position: the player ticks four times
+  // a second, but the segment only changes every few seconds, and React bails out of a re-render
+  // when the value is unchanged. So the list re-renders on segment boundaries, not on every tick.
+  const handleTimeUpdate = useCallback(
+    (currentMs: number) => {
+      setActiveSequence(findActiveSegmentSequence(segments, currentMs));
+    },
+    [segments],
+  );
+
   return (
     <div className={styles.container}>
       <aside className={styles.sidebar}>
-        <VideoPlayer videoId={result.video.id} ref={playerRef} />
+        <VideoPlayer videoId={result.video.id} ref={playerRef} onTimeUpdate={handleTimeUpdate} />
 
         <div>
           <p className={styles.eyebrow}>Vídeo</p>
@@ -66,22 +79,19 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 
         <div className={styles.actions}>
           <p className={styles.actionsLabel}>Acciones</p>
-          <button type="button" onClick={() => copy(toPlainText(result.segments, "sourceText"), "Transcripción copiada")}>
+          <button type="button" onClick={() => copy(toPlainText(segments, "sourceText"), "Transcripción copiada")}>
             Copiar transcripción
           </button>
-          <button type="button" onClick={() => copy(toPlainText(result.segments, "translatedText"), "Traducción copiada")}>
+          <button type="button" onClick={() => copy(toPlainText(segments, "translatedText"), "Traducción copiada")}>
             Copiar traducción
           </button>
           <button
             type="button"
-            onClick={() => downloadTextFile(toPlainText(result.segments, "translatedText"), "traduccion.txt")}
+            onClick={() => downloadTextFile(toPlainText(segments, "translatedText"), "traduccion.txt")}
           >
             Descargar .txt
           </button>
-          <button
-            type="button"
-            onClick={() => downloadTextFile(toSrt(result.segments, "translatedText"), "traduccion.srt")}
-          >
+          <button type="button" onClick={() => downloadTextFile(toSrt(segments, "translatedText"), "traduccion.srt")}>
             Descargar .srt
           </button>
         </div>
@@ -120,9 +130,9 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
         </div>
 
         {tab === "transcript" ? (
-          <TranscriptViewer segments={result.segments} onSegmentClick={jumpToSegment} />
+          <TranscriptViewer segments={segments} onSegmentClick={jumpToSegment} activeSequence={activeSequence} />
         ) : (
-          <TranslationViewer segments={result.segments} onSegmentClick={jumpToSegment} />
+          <TranslationViewer segments={segments} onSegmentClick={jumpToSegment} activeSequence={activeSequence} />
         )}
       </section>
     </div>

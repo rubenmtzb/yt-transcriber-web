@@ -59,4 +59,21 @@ describe("SegmentList", () => {
 
     screen.getAllByRole("button").forEach((button) => expect(button).toBeDisabled());
   });
+
+  it("marks the segment matching activeSequence as the current one", () => {
+    render(
+      <SegmentList segments={SEGMENTS} field="translatedText" searchPlaceholder="Buscar..." activeSequence={1} />,
+    );
+
+    expect(screen.getByText("Cómo estás").closest("li")).toHaveAttribute("aria-current", "true");
+    expect(screen.getByText("Hola a todos").closest("li")).not.toHaveAttribute("aria-current");
+  });
+
+  it("marks no row as current when nothing is playing", () => {
+    render(
+      <SegmentList segments={SEGMENTS} field="translatedText" searchPlaceholder="Buscar..." activeSequence={null} />,
+    );
+
+    expect(document.querySelector("[aria-current]")).toBeNull();
+  });
 });

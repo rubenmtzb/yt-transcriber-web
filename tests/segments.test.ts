@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { foldForSearch, formatTimestamp, toPlainText, toSrt } from "../src/lib/segments";
+import { findActiveSegmentSequence, foldForSearch, formatTimestamp, toPlainText, toSrt } from "../src/lib/segments";
 import type { SegmentDto } from "../src/types/api";
 
 const SEGMENTS: SegmentDto[] = [
@@ -38,5 +38,41 @@ describe("foldForSearch", () => {
   it("strips accents and lowercases, so accent-free queries still match", () => {
     expect(foldForSearch("Cómo estás")).toBe("como estas");
     expect(foldForSearch("NIÑO")).toBe("nino");
+  });
+});
+
+describe("findActiveSegmentSequence", () => {
+  it("returns the sequence of the segment covering the current position", () => {
+    expect(findActiveSegmentSequence(SEGMENTS, 2000)).toBe(0);
+    expect(findActiveSegmentSequence(SEGMENTS, 66_000)).toBe(1);
+  });
+
+  it("treats a segment's start as inside it and its end as already past it", () => {
+    expect(findActiveSegmentSequence(SEGMENTS, 1360)).toBe(0);
+    expect(findActiveSegmentSequence(SEGMENTS, 3040)).toBeNull();
+  });
+
+  it("returns null in the gaps before, between and after segments", () => {
+    expect(findActiveSegmentSequence(SEGMENTS, 0)).toBeNull();
+    expect(findActiveSegmentSequence(SEGMENTS, 10_000)).toBeNull();
+    expect(findActiveSegmentSequence(SEGMENTS, 999_999)).toBeNull();
+  });
+
+  it("returns null for an empty segment list", () => {
+    expect(findActiveSegmentSequence([], 1000)).toBeNull();
+  });
+
+  it("finds the right segment across a long list, exercising the binary search", () => {
+    const many: SegmentDto[] = Array.from({ length: 1000 }, (_, index) => ({
+      sequence: index,
+      startMs: index * 1000,
+      endMs: index * 1000 + 1000,
+      sourceText: `line ${index}`,
+      translatedText: `linea ${index}`,
+    }));
+
+    expect(findActiveSegmentSequence(many, 0)).toBe(0);
+    expect(findActiveSegmentSequence(many, 500_500)).toBe(500);
+    expect(findActiveSegmentSequence(many, 999_999)).toBe(999);
   });
 });
