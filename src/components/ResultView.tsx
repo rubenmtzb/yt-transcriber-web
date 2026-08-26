@@ -18,6 +18,7 @@ interface ResultViewProps {
 type Tab = "transcript" | "translation" | "dual";
 
 const SEEK_STEP_MS = 5000;
+const FEEDBACK_TIMEOUT_MS = 2000;
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) {
@@ -33,11 +34,37 @@ export default function ResultView({ result, onReset, initialSeekMs }: ResultVie
   const [currentMs, setCurrentMs] = useState(initialSeekMs ?? 0);
   const [loopSequence, setLoopSequence] = useState<number | null>(null);
   const playerRef = useRef<VideoPlayerHandle>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const segments = result.segments;
+
+  function showFeedback(message: string) {
+    // Restart the countdown on every message, otherwise a timer left over from a previous click
+    // clears the new one early.
+    if (feedbackTimeoutRef.current !== null) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    setFeedback(message);
+    feedbackTimeoutRef.current = setTimeout(() => setFeedback(null), FEEDBACK_TIMEOUT_MS);
+  }
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current !== null) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   async function copy(text: string, message: string) {
-    await navigator.clipboard.writeText(text);
-    setFeedback(message);
-    setTimeout(() => setFeedback(null), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      showFeedback(message);
+    } catch {
+      // The Clipboard API rejects outside a secure context or when the user denies permission.
+      // Downloading still works, so say so instead of failing silently.
+      showFeedback("No se pudo copiar. Usa la descarga.");
+    }
   }
 
   function jumpToSegment(segment: SegmentDto) {
@@ -63,11 +90,9 @@ export default function ResultView({ result, onReset, initialSeekMs }: ResultVie
     try {
       const blob = await renderQuoteCard({ segment, videoTitle: result.video.title, mode });
       downloadBlob(blob, `cita-${result.video.id}-${segment.sequence}.png`);
-      setFeedback("Imagen descargada");
-      setTimeout(() => setFeedback(null), 2000);
+      showFeedback("Imagen descargada");
     } catch {
-      setFeedback("No se pudo generar la imagen");
-      setTimeout(() => setFeedback(null), 2000);
+      showFeedback("No se pudo generar la imagen");
     }
   }
 
@@ -189,22 +214,19 @@ export default function ResultView({ result, onReset, initialSeekMs }: ResultVie
 
         <div className={styles.actions}>
           <p className={styles.actionsLabel}>Acciones</p>
-          <button type="button" onClick={() => copy(toPlainText(result.segments, "sourceText"), "Transcripción copiada")}>
+          <button type="button" onClick={() => copy(toPlainText(segments, "sourceText"), "Transcripción copiada")}>
             Copiar transcripción
           </button>
-          <button type="button" onClick={() => copy(toPlainText(result.segments, "translatedText"), "Traducción copiada")}>
+          <button type="button" onClick={() => copy(toPlainText(segments, "translatedText"), "Traducción copiada")}>
             Copiar traducción
           </button>
           <button
             type="button"
-            onClick={() => downloadTextFile(toPlainText(result.segments, "translatedText"), "traduccion.txt")}
+            onClick={() => downloadTextFile(toPlainText(segments, "translatedText"), "traduccion.txt")}
           >
             Descargar .txt
           </button>
-          <button
-            type="button"
-            onClick={() => downloadTextFile(toSrt(result.segments, "translatedText"), "traduccion.srt")}
-          >
+          <button type="button" onClick={() => downloadTextFile(toSrt(segments, "translatedText"), "traduccion.srt")}>
             Descargar .srt
           </button>
         </div>

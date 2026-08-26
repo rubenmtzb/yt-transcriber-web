@@ -1,11 +1,17 @@
-import type { ErrorResponseDto, ProcessingStage, TranscriptionRequestDto, TranscriptionResponseDto } from "../types/api";
+import type {
+  ErrorCode,
+  ErrorResponseDto,
+  ProcessingStage,
+  TranscriptionRequestDto,
+  TranscriptionResponseDto,
+} from "../types/api";
 
 const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 const SESSION_QUERY_PARAM = "sessionId";
 const SESSION_STORAGE_KEY = "yt-transcriber-session-id";
 
 export class ApiError extends Error {
-  readonly code: ErrorResponseDto["code"];
+  readonly code: ErrorCode;
   readonly retryable: boolean;
   readonly requestId: string;
 

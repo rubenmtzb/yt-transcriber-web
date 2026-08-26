@@ -35,7 +35,10 @@ export function toSrt(segments: SegmentDto[], field: SegmentField): string {
     .join("\n");
 }
 
-const COMBINING_DIACRITICS = /[̀-ͯ]/g;
+// Escaped rather than written literally: these are the Unicode combining marks that NFD splits
+// accents into, and as raw characters they are invisible in an editor and easily mangled by a
+// tool that rewrites the file's encoding.
+const COMBINING_DIACRITICS = /[\u0300-\u036f]/g;
 
 export function foldForSearch(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(COMBINING_DIACRITICS, "");
@@ -46,8 +49,13 @@ export function downloadBlob(blob: Blob, filename: string): void {
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
+  // Firefox only honours a click on a link that is actually in the document, and the object URL
+  // has to outlive the click, so it is released on the next tick instead of immediately.
+  link.style.display = "none";
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export function downloadTextFile(content: string, filename: string): void {
