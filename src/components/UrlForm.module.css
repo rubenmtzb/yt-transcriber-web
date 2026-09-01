@@ -37,6 +37,18 @@
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Same gesture as the logo: grow on approach, sink on press. */
+.submit:hover:not(:disabled),
+.submit:focus-visible:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(177, 74, 237, 0.45);
+}
+
+.submit:active:not(:disabled) {
+  transform: scale(0.97);
 }
 
 .submit:disabled {

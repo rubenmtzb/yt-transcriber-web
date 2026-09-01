@@ -53,10 +53,16 @@ export default function UrlForm({ onSubmit, disabled = false, initialUrl = "", i
       </div>
 
       <div className={styles.options}>
-        <label className={styles.optionsLabel} htmlFor="targetLanguage">
+        <label className={styles.optionsLabel} id="targetLanguageLabel" htmlFor="targetLanguage">
           Traducir a
         </label>
-        <LanguageSelect id="targetLanguage" value={targetLanguage} onChange={setTargetLanguage} disabled={disabled} />
+        <LanguageSelect
+          id="targetLanguage"
+          labelId="targetLanguageLabel"
+          value={targetLanguage}
+          onChange={setTargetLanguage}
+          disabled={disabled}
+        />
       </div>
 
       {validationError && (
