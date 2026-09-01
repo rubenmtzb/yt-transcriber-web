@@ -1,0 +1,84 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 640px;
+}
+
+.inputRow {
+  display: flex;
+  gap: var(--space-2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text);
+  padding: var(--space-2) var(--space-3);
+}
+
+.input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.submit {
+  background: var(--color-accent-1);
+  color: var(--color-bg);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Same gesture as the logo: grow on approach, sink on press. */
+.submit:hover:not(:disabled),
+.submit:focus-visible:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 18px rgba(177, 74, 237, 0.45);
+}
+
+.submit:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.options {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.optionsLabel {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.error {
+  color: var(--color-danger);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .inputRow {
+    flex-direction: column;
+  }
+
+  .submit {
+    width: 100%;
+  }
+}

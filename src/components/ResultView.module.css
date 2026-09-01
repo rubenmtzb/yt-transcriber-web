@@ -1,0 +1,284 @@
+.container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-5);
+  text-align: left;
+  align-items: start;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: sticky;
+  top: var(--space-4);
+}
+
+.eyebrow {
+  color: var(--color-accent-1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: var(--space-1);
+}
+
+.meta {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.actionsLabel {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-1);
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.actionButton,
+.formatButton {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: var(--space-1) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  transition: transform 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.formatButton {
+  font-variant: small-caps;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.actionButton:hover,
+.formatButton:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent-1);
+  transform: scale(1.05);
+}
+
+.actionButton:active,
+.formatButton:active {
+  transform: scale(0.97);
+}
+
+.shortcuts {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+/* Floated over the page rather than parked in the sidebar. It used to reserve a line of height
+   while invisible -- 67px of dead space between the shortcuts and the reset button -- and, worse,
+   a confirmation triggered from a transcript row appeared in a sidebar the reader had long since
+   scrolled past. */
+.feedback {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-4);
+  z-index: 30;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-accent-1);
+  border-radius: 999px;
+  box-shadow: 0 12px 30px rgba(5, 6, 14, 0.6);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  pointer-events: none;
+}
+
+.feedback[data-visible="true"] {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.reset {
+  align-self: flex-start;
+  color: var(--color-accent-1);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transform-origin: left center;
+  transition: transform 0.2s ease;
+}
+
+.reset:hover {
+  transform: scale(1.06);
+}
+
+.reset:active {
+  transform: scale(0.98);
+}
+
+/* Reading mode: the sidebar is hidden, not unmounted, so the audio keeps running while the
+   transcript takes the full width. */
+.container[data-reading="true"] {
+  grid-template-columns: 1fr;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.container[data-reading="true"] .sidebar {
+  display: none;
+}
+
+.readingToggle {
+  align-self: flex-end;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.readingToggle:hover {
+  transform: scale(1.05);
+  border-color: var(--color-accent-1);
+  color: var(--color-text);
+}
+
+.readingToggle[aria-pressed="true"] {
+  border-color: var(--color-accent-1);
+  color: var(--color-accent-1);
+}
+
+.readingTransport {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+}
+
+.readingPlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-accent-1);
+  color: var(--color-bg);
+  font-size: 0.8rem;
+  transition: transform 0.2s ease;
+}
+
+.readingPlay:hover {
+  transform: scale(1.08);
+}
+
+.readingTime {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  min-width: 0;
+}
+
+.sameLanguageNotice {
+  animation: riseIn 0.4s ease-out both;
+  background: rgba(177, 74, 237, 0.08);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab {
+  padding: var(--space-2) 0;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab[data-active="true"] {
+  color: var(--color-text);
+  border-bottom-color: var(--color-accent-1);
+}
+
+@media (max-width: 800px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
+  /* Keyboard hints are meaningless on a touch device. */
+  .shortcuts {
+    display: none;
+  }
+
+  /* Three labels don't fit a phone's width; scrolling the strip keeps them on one line instead of
+     dropping the last one onto a row of its own, where it reads as a stray link. */
+  .tabs {
+    gap: var(--space-3);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tab {
+    flex-shrink: 0;
+    font-size: 0.9rem;
+  }
+}
+
+/* Local copy: see the note in TranscriptionApp.module.css. */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

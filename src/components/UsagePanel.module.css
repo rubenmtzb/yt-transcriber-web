@@ -1,0 +1,118 @@
+/* Deliberately lighter than the form above it: this is advisory, and as a bordered filled card it
+   drew more attention than the field it is advising about. The border comes back only when the
+   budget is actually gone, which is the one time it should interrupt. */
+.panel {
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  text-align: left;
+  animation: panelIn 0.5s ease-out 0.2s both;
+}
+
+.panel[data-exhausted="true"] {
+  background: var(--color-surface);
+  border-color: var(--color-warning);
+}
+
+.meters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.meterHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.meterLabel {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.meterValue {
+  color: var(--color-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.meterValue[data-empty="true"] {
+  color: var(--color-warning);
+}
+
+.meterTotal {
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+
+.track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-structure);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-accent-2), var(--color-accent-1));
+  transition: width 0.4s ease;
+}
+
+.panel[data-exhausted="true"] .fill {
+  background: var(--color-warning);
+}
+
+.reset {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.panel[data-exhausted="true"] .note {
+  color: var(--color-warning);
+}
+
+@media (max-width: 560px) {
+  .meters {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

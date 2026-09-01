@@ -1,0 +1,126 @@
+:root {
+  --color-bg: #05060e;
+  --color-surface: #12163a;
+  --color-structure: #2e1a63;
+  --color-accent-2: #5b2a86;
+  --color-accent-1: #b14aed;
+
+  --color-text: #f4f2fa;
+  --color-text-muted: #9a94b8;
+  --color-border: #2e1a63;
+
+  --color-danger: #e2547a;
+  --color-warning: #d9a441;
+  --color-success: #3fbf7f;
+
+  --font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 48px;
+}
+
+/* Registered so it can be animated: an unregistered custom property is just a token to the
+   interpolator and would jump from 0% to 100% instead of sweeping. Used by the karaoke-style
+   fills on the headline and the section headings. */
+@property --sweep {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-weight: 500;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-1);
+  outline-offset: 2px;
+}
+
+/* The house entrance: content rises into place instead of appearing. Elements opt in by name so
+   the delay can be staggered per item at the call site. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The same left-to-right fill the transcript uses to follow along, reused as a reveal. */
+@keyframes sweep-in {
+  from {
+    --sweep: 0%;
+  }
+  to {
+    --sweep: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
