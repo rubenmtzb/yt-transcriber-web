@@ -1,0 +1,22 @@
+/* The sweep is a two-stop gradient clipped to the glyphs, with the stop position driven by the
+   --fill custom property that KaraokeText writes per frame. Painting each word separately (rather
+   than one gradient over the whole line) is what makes it follow reading order when the line
+   wraps: a single gradient across the block would advance every visual line at once. */
+.word {
+  background-image: linear-gradient(
+    90deg,
+    var(--karaoke-done, var(--color-accent-1)) 0 calc(var(--fill, 0) * 100%),
+    var(--karaoke-pending, var(--color-text)) calc(var(--fill, 0) * 100%) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Selection needs a real colour back, or highlighted text turns invisible. */
+.word::selection {
+  color: var(--color-text);
+  -webkit-text-fill-color: var(--color-text);
+  background: var(--color-accent-2);
+}
