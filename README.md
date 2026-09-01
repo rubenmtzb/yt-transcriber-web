@@ -8,18 +8,22 @@ A single-page, no-login web app. It talks to `yt-transcriber-api` over a plain J
 
 ## Features
 
-**Implemented**
-
-- Project scaffold (Astro + React + TypeScript), design tokens, base layout.
-- Typed API client (`src/services/api.ts`) matching the backend's request/response/error contract exactly.
-
-**Planned**
-
-- Home/Landing screen (URL input, language select, trust badges).
-- Processing screen (step-by-step progress).
-- Result screen (transcript/translation tabs, copy/download actions).
-- Error states mapped from the backend's error envelope.
-- Responsive layout (desktop/tablet/mobile).
+- Landing screen: URL input with client-side validation, target-language select, trust badges.
+- Live progress: the backend streams its stage over SSE, shown as a step-by-step checklist.
+- Result screen: transcript / translation / dual-language tabs, per-segment search
+  (accent-insensitive), copy to clipboard and `.txt` / `.srt` download.
+- Embedded player with custom controls (play/pause, seek bar, playback speed, mute) — the
+  segment being spoken is highlighted and kept in view as the video plays, and clicking any
+  segment jumps the player to that moment.
+- Per-segment actions: loop a line, copy a deep link to that exact moment
+  (`?v=<id>&t=<seconds>&lang=<code>`, auto-plays and seeks on open), or export it as a shareable
+  quote-card image.
+- Keyboard shortcuts while viewing a result: space to play/pause, ←/→ to seek, ↑/↓ to jump a
+  segment, M to mute, L to loop the current line.
+- Recent-history strip (kept in `localStorage`, last 5 videos) for reopening a result instantly
+  without re-spending the session's rate-limit budget.
+- Error states mapped one-to-one from the backend's error envelope.
+- Responsive layout (desktop/tablet/mobile) and a reduced-motion path throughout.
 
 ## Architecture
 
@@ -46,6 +50,7 @@ Astro renders the static shell; React is used only for the interactive parts (th
 npm install
 npm run dev       # http://localhost:4321
 npm run check     # type-check
+npm run test      # unit + component tests
 npm run build     # static output to dist/
 ```
 
@@ -70,13 +75,29 @@ Copy `.env.example` to `.env`:
 
 ```text
 src/
-  components/     UrlForm, LanguageSelect, ProcessingState, TranscriptViewer, TranslationViewer, ErrorState (React)
+  components/     React islands (TranscriptionApp orchestrates the phases; UrlForm,
+                  ProcessingState, ErrorState, ResultView, VideoPlayer, SegmentList,
+                  TranscriptViewer / TranslationViewer / DualViewer, RecentHistory) plus the
+                  static Header/Footer Astro partials. Styles live next to each component as
+                  a *.module.css file.
   layouts/        BaseLayout.astro
-  pages/          index.astro
-  services/       api.ts — typed fetch client
+  pages/          index.astro, como-funciona.astro, privacidad.astro
+  services/       api.ts — SSE client for the transcription stream
+  lib/            segments.ts — pure segment helpers (formatting, SRT, search folding)
+                  history.ts — localStorage-backed recent-history cache
+                  quoteCard.ts — canvas-rendered shareable quote-card image
+                  each unit-tested in isolation
   types/          api.ts — request/response/error DTOs, matching the backend exactly
+                  youtube.d.ts — typings for the YouTube IFrame Player API surface this app uses
   styles/         global.css — design tokens (colors, spacing) and reset
+tests/            Vitest + Testing Library, mirroring src/
 ```
+
+State lives in `TranscriptionApp` as a single `phase` (`idle` → `processing` → `success` |
+`error`), plus the recent-history list and an optional deep-link prefill; every other component
+is driven by props, which keeps the interactive surface testable without mounting the whole app.
+`ResultView` owns per-result UI state (active tab, loop segment, playback position) and the
+keyboard-shortcut listener.
 
 ## Related Repository
 

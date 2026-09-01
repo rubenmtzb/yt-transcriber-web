@@ -181,3 +181,16 @@
     display: none;
   }
 }
+
+/* The IFrame API swaps the target element for an <iframe> of its own, which does not inherit the
+   .player class -- so sizing is applied here directly rather than relying on that class. This
+   also means .player's `pointer-events: none` above never actually reaches the rendered iframe,
+   so it's repeated here: without it, clicking the video bypasses the custom controls entirely
+   (native play/pause on click, native fullscreen on double-click). */
+.wrapper iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+}

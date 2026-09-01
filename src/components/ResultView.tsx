@@ -79,8 +79,14 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
   // position tick would defeat that and re-render every line five times a second.
   const copy = useCallback(
     async (text: string, message: string) => {
-      await navigator.clipboard.writeText(text);
-      notify(message);
+      try {
+        await navigator.clipboard.writeText(text);
+        notify(message);
+      } catch {
+        // The Clipboard API rejects outside a secure context or when the user denies permission.
+        // Downloading still works, so say so instead of failing silently.
+        notify("No se pudo copiar. Usa la descarga.");
+      }
     },
     [notify],
   );

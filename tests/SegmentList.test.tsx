@@ -115,4 +115,21 @@ describe("SegmentList", () => {
     expect(onSegmentClick).not.toHaveBeenCalled();
     selection.mockRestore();
   });
+
+  it("marks the segment matching activeSequence as the current one", () => {
+    render(
+      <SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." activeSequence={1} />,
+    );
+
+    expect(screen.getByText("Cómo estás").closest("li")).toHaveAttribute("data-active", "true");
+    expect(screen.getByText("Hola a todos").closest("li")).toHaveAttribute("data-active", "false");
+  });
+
+  it("marks no row as active when nothing is playing", () => {
+    render(
+      <SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." activeSequence={null} />,
+    );
+
+    expect(document.querySelector('[data-active="true"]')).toBeNull();
+  });
 });

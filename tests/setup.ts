@@ -46,3 +46,11 @@ beforeEach(() => {
   localStorageStub.clear();
   sessionStorageStub.clear();
 });
+
+// jsdom implements neither, and the transcript list calls both while following the spoken line.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}
+if (!Element.prototype.scrollTo) {
+  Element.prototype.scrollTo = () => {};
+}

@@ -1,4 +1,5 @@
 import type {
+  ErrorCode,
   ErrorResponseDto,
   ProcessingStage,
   TranscriptionRequestDto,
@@ -11,7 +12,7 @@ const SESSION_QUERY_PARAM = "sessionId";
 const SESSION_STORAGE_KEY = "yt-transcriber-session-id";
 
 export class ApiError extends Error {
-  readonly code: ErrorResponseDto["code"];
+  readonly code: ErrorCode;
   readonly retryable: boolean;
   readonly requestId: string;
 
