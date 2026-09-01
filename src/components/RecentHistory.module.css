@@ -24,10 +24,12 @@
 .clear {
   color: var(--color-text-muted);
   font-size: 0.75rem;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .clear:hover {
   color: var(--color-danger);
+  transform: scale(1.06);
 }
 
 .list {
@@ -50,10 +52,20 @@
   padding: var(--space-2);
   text-align: left;
   cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card:hover {
+/* A full-width card, so it grows less than the small controls do -- the same 1.05 that reads as a
+   nudge on a button reads as the whole page shifting on a block this wide. */
+.card:hover,
+.card:focus-visible {
+  transform: scale(1.015);
   border-color: var(--color-accent-1);
+  box-shadow: 0 0 18px rgba(177, 74, 237, 0.22);
+}
+
+.card:active {
+  transform: scale(0.995);
 }
 
 .thumb {
@@ -63,6 +75,11 @@
   border-radius: var(--radius-md);
   object-fit: cover;
   background: var(--color-bg);
+  transition: transform 0.25s ease;
+}
+
+.card:hover .thumb {
+  transform: scale(1.06);
 }
 
 .cardBody {
@@ -79,6 +96,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.resume {
+  color: var(--color-accent-1);
+  font-weight: 600;
 }
 
 .cardMeta {

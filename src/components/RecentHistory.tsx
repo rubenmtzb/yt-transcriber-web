@@ -1,12 +1,12 @@
-import type { TranscriptionResponseDto } from "../types/api";
 import type { HistoryEntry } from "../lib/history";
 import { formatRelativeTime } from "../lib/history";
+import { formatTimestamp } from "../lib/segments";
 import { SUPPORTED_TARGET_LANGUAGES } from "./LanguageSelect";
 import styles from "./RecentHistory.module.css";
 
 interface RecentHistoryProps {
   entries: HistoryEntry[];
-  onSelect: (result: TranscriptionResponseDto) => void;
+  onSelect: (entry: HistoryEntry) => void;
   onClear: () => void;
 }
 
@@ -30,7 +30,7 @@ export default function RecentHistory({ entries, onSelect, onClear }: RecentHist
       <ul className={styles.list}>
         {entries.map((entry) => (
           <li key={entry.result.video.id}>
-            <button type="button" className={styles.card} onClick={() => onSelect(entry.result)}>
+            <button type="button" className={styles.card} onClick={() => onSelect(entry)}>
               <img
                 src={`https://i.ytimg.com/vi/${entry.result.video.id}/mqdefault.jpg`}
                 alt=""
@@ -41,6 +41,9 @@ export default function RecentHistory({ entries, onSelect, onClear }: RecentHist
                 <span className={styles.cardTitle}>{entry.result.video.title}</span>
                 <span className={styles.cardMeta}>
                   {languageLabel(entry.result.targetLanguage)} · {formatRelativeTime(entry.savedAt)}
+                  {entry.positionMs !== undefined && (
+                    <span className={styles.resume}> · continúa en {formatTimestamp(entry.positionMs)}</span>
+                  )}
                 </span>
               </span>
             </button>
