@@ -1,4 +1,10 @@
-import type { ErrorResponseDto, ProcessingStage, TranscriptionRequestDto, TranscriptionResponseDto } from "../types/api";
+import type {
+  ErrorResponseDto,
+  ProcessingStage,
+  TranscriptionRequestDto,
+  TranscriptionResponseDto,
+  UsageSnapshotDto,
+} from "../types/api";
 
 const API_BASE_URL = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 const SESSION_QUERY_PARAM = "sessionId";
@@ -39,6 +45,59 @@ function storeSessionId(sessionId: string): void {
     // sessionStorage can be unavailable (private browsing, disabled storage); the app still
     // works, it just gets a fresh session id from the backend on every request.
   }
+}
+
+/**
+ * The caller's remaining hourly budget. Returns null instead of throwing when the backend is down
+ * or unreachable: this only drives an advisory line under the form, and failing to fetch it must
+ * not stop someone from trying a transcription.
+ */
+export async function fetchUsage(): Promise<UsageSnapshotDto | null> {
+  const params = new URLSearchParams();
+  const storedSessionId = getStoredSessionId();
+  if (storedSessionId) {
+    params.set(SESSION_QUERY_PARAM, storedSessionId);
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/transcriptions/usage?${params.toString()}`);
+    if (!response.ok) {
+      return null;
+    }
+    const issuedSessionId = response.headers.get("X-Session-Id");
+    if (issuedSessionId) {
+      storeSessionId(issuedSessionId);
+    }
+    return normalizeUsage(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Coerces the response into a complete snapshot before it reaches the UI.
+ *
+ * A backend running an older build answers this endpoint without the newer fields, and an absent
+ * number would otherwise flow into the panel's arithmetic and render as "en NaN min" rather than
+ * as missing. Anything unusable is reported as absent, which the panel already knows how to show.
+ */
+function normalizeUsage(body: Partial<UsageSnapshotDto> | null): UsageSnapshotDto | null {
+  if (!body || typeof body.requestsRemaining !== "number") {
+    return null;
+  }
+  const seconds = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : null);
+  const count = (value: unknown, fallback: number) =>
+    typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+  return {
+    requestsRemaining: body.requestsRemaining,
+    maxRequestsPerHour: count(body.maxRequestsPerHour, body.requestsRemaining),
+    requestsResetInSeconds: seconds(body.requestsResetInSeconds),
+    audioMinutesRemaining: count(body.audioMinutesRemaining, 0),
+    maxAudioMinutesPerHour: count(body.maxAudioMinutesPerHour, count(body.audioMinutesRemaining, 0)),
+    audioMinutesResetInSeconds: seconds(body.audioMinutesResetInSeconds),
+    maxVideoDurationSeconds: count(body.maxVideoDurationSeconds, 0),
+  };
 }
 
 interface StreamCallbacks {

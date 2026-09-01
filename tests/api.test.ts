@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, createTranscriptionStream } from "../src/services/api";
+import { ApiError, createTranscriptionStream, fetchUsage } from "../src/services/api";
 import type { ErrorResponseDto } from "../src/types/api";
 
 type Listener = (event: unknown) => void;
@@ -156,5 +156,60 @@ describe("createTranscriptionStream", () => {
     close();
 
     expect(latestSource().closed).toBe(true);
+  });
+});
+
+describe("fetchUsage", () => {
+  const originalFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  function respondWith(body: unknown) {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      headers: new Headers(),
+      json: async () => body,
+    }) as unknown as typeof fetch;
+  }
+
+  it("passes a complete snapshot straight through", async () => {
+    respondWith({
+      requestsRemaining: 1,
+      maxRequestsPerHour: 3,
+      requestsResetInSeconds: 900,
+      audioMinutesRemaining: 20,
+      maxAudioMinutesPerHour: 60,
+      audioMinutesResetInSeconds: 900,
+      maxVideoDurationSeconds: 1200,
+    });
+
+    await expect(fetchUsage()).resolves.toMatchObject({ requestsRemaining: 1, requestsResetInSeconds: 900 });
+  });
+
+  it("reports missing fields as absent rather than letting them reach the UI as NaN", async () => {
+    // The shape a backend running an older build still answers with.
+    respondWith({ requestsRemaining: 3, maxRequestsPerHour: 3, audioMinutesRemaining: 60, maxAudioMinutesPerHour: 60 });
+
+    const usage = await fetchUsage();
+
+    expect(usage).toMatchObject({
+      requestsRemaining: 3,
+      requestsResetInSeconds: null,
+      audioMinutesResetInSeconds: null,
+      maxVideoDurationSeconds: 0,
+    });
+  });
+
+  it("gives up rather than guessing when the body is not a usage snapshot at all", async () => {
+    respondWith({ unexpected: true });
+
+    await expect(fetchUsage()).resolves.toBeNull();
+  });
+
+  it("returns null when the backend is unreachable, so the form still works", async () => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error("offline")) as unknown as typeof fetch;
+
+    await expect(fetchUsage()).resolves.toBeNull();
   });
 });
