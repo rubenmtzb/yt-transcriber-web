@@ -7,6 +7,8 @@ export interface VideoPlayerHandle {
   seekBy: (deltaMs: number) => void;
   togglePlay: () => void;
   toggleMute: () => void;
+  /** Live position, for callers that need finer resolution than the 200ms progress polling. */
+  getCurrentMs: () => number;
 }
 
 interface LoopSegment {
@@ -17,6 +19,7 @@ interface LoopSegment {
 interface VideoPlayerProps {
   videoId: string;
   onTimeUpdate?: (currentMs: number) => void;
+  onPlayingChange?: (isPlaying: boolean) => void;
   loopSegment?: LoopSegment | null;
   initialSeekMs?: number;
 }
@@ -79,13 +82,15 @@ function VolumeIcon({ muted }: { muted: boolean }) {
 }
 
 const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPlayer(
-  { videoId, onTimeUpdate, loopSegment, initialSeekMs },
+  { videoId, onTimeUpdate, onPlayingChange, loopSegment, initialSeekMs },
   ref
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YT.Player | null>(null);
   const onTimeUpdateRef = useRef(onTimeUpdate);
   onTimeUpdateRef.current = onTimeUpdate;
+  const onPlayingChangeRef = useRef(onPlayingChange);
+  onPlayingChangeRef.current = onPlayingChange;
   const loopSegmentRef = useRef(loopSegment);
   loopSegmentRef.current = loopSegment;
   const initialSeekMsRef = useRef(initialSeekMs);
@@ -93,6 +98,9 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
 
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  // Sticky, unlike isPlaying: once the video has run, pausing should reveal the frame it's paused
+  // on, not drop the poster back over it.
+  const [hasStarted, setHasStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentMs, setCurrentMs] = useState(0);
   const [durationMs, setDurationMs] = useState(0);
@@ -130,7 +138,11 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
             if (cancelled) {
               return;
             }
-            setIsPlaying(event.data === window.YT!.PlayerState.PLAYING);
+            const playing = event.data === window.YT!.PlayerState.PLAYING;
+            setIsPlaying(playing);
+            if (playing) {
+              setHasStarted(true);
+            }
             if (event.data === window.YT!.PlayerState.ENDED) {
               setCurrentMs(event.target.getDuration() * 1000);
             }
@@ -147,6 +159,10 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId]);
+
+  useEffect(() => {
+    onPlayingChangeRef.current?.(isPlaying);
+  }, [isPlaying]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -219,6 +235,9 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     },
     togglePlay,
     toggleMute,
+    getCurrentMs() {
+      return (playerRef.current?.getCurrentTime() ?? 0) * 1000;
+    },
   }));
 
   function handleSeekInput(event: React.InputEvent<HTMLInputElement>) {
@@ -251,6 +270,38 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
     <div className={styles.wrapper}>
       <div className={styles.frame}>
         <div ref={containerRef} className={styles.player} />
+        {/* The iframe is pointer-events:none so YouTube's own overlay (branding, share, "watch on
+            YouTube") stays out of reach -- which also swallows clicks on the poster. This catcher
+            gives that surface back to our own controls. Not focusable: the control bar below and
+            the space shortcut already cover keyboard users. */}
+        <button
+          type="button"
+          className={styles.surface}
+          onClick={togglePlay}
+          disabled={!isReady}
+          tabIndex={-1}
+          aria-hidden="true"
+        >
+          {/* Covers YouTube's unstarted screen -- its own title bar, channel avatar, watermark and
+              red play button -- until the video actually starts, so the frame reads as part of
+              this page. The thumbnail is the only thing borrowed, and it's dropped silently if it
+              fails to load rather than leaving a broken image. */}
+          {!hasStarted && (
+            <span className={styles.poster}>
+              <img
+                src={`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`}
+                alt=""
+                className={styles.posterImage}
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                }}
+              />
+              <span className={styles.posterPlay}>
+                <PlayIcon />
+              </span>
+            </span>
+          )}
+        </button>
       </div>
 
       <div className={styles.controls} data-disabled={!isReady}>
