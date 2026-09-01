@@ -20,38 +20,131 @@
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 700;
   line-height: 1.15;
+  animation: riseIn 0.6s ease-out both;
 }
 
+/* The headline says out loud what the transcript does: the accent words get sung through once on
+   arrival, with the same left-to-right fill the active line uses while the video plays. */
 .accent {
-  color: var(--color-accent-1);
+  background-image: linear-gradient(
+    90deg,
+    var(--color-accent-1) 0 var(--sweep),
+    var(--color-text) var(--sweep) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: sweepIn 1.1s ease-out 0.35s both;
 }
 
 .subtext {
   color: var(--color-text-muted);
   font-size: 1.1rem;
+  animation: riseIn 0.6s ease-out 0.12s both;
 }
 
+/* Two columns rather than four: at a quarter of the width both the titles and the descriptions
+   wrapped, and each card broke at a different point, so the row read as ragged rather than as a
+   set. Two columns give every line room to stay on one line. */
 .badges {
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-5);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+  /* Matches the form and the usage panel, so the column of content shares one edge instead of the
+     cards jutting out past the field above them. */
+  width: 100%;
+  max-width: 640px;
   padding: 0;
   margin: 0;
+}
+
+@media (max-width: 460px) {
+  .badges {
+    grid-template-columns: 1fr;
+  }
 }
 
 .badges li {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 2px;
+  min-width: 0;
+  padding: var(--space-3);
   font-size: 0.85rem;
+  text-align: left;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  animation: riseIn 0.5s ease-out both;
+}
+
+/* Staggered so the row assembles itself rather than snapping in as one block. */
+.badges li:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.badges li:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.badges li:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+.badges li:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+.badges li:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-accent-1);
 }
 
 .badges strong {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   color: var(--color-text);
 }
 
+.badges strong::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent-1);
+  flex-shrink: 0;
+}
+
+/* Pushed to the bottom of the card so the descriptions stay on one line with each other even when
+   a title wraps to two. */
 .badges span {
+  margin-top: auto;
   color: var(--color-text-muted);
+}
+
+/* Local copies of the shared entrance keyframes: CSS modules rewrite every animation name to a
+   scoped one, so a module can only reference keyframes declared in the same file. */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sweepIn {
+  from {
+    --sweep: 0%;
+  }
+  to {
+    --sweep: 100%;
+  }
 }

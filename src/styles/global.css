@@ -26,6 +26,15 @@
   --space-6: 48px;
 }
 
+/* Registered so it can be animated: an unregistered custom property is just a token to the
+   interpolator and would jump from 0% to 100% instead of sweeping. Used by the karaoke-style
+   fills on the headline and the section headings. */
+@property --sweep {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
 *,
 *::before,
 *::after {
@@ -81,6 +90,29 @@ button {
 :focus-visible {
   outline: 2px solid var(--color-accent-1);
   outline-offset: 2px;
+}
+
+/* The house entrance: content rises into place instead of appearing. Elements opt in by name so
+   the delay can be staggered per item at the call site. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The same left-to-right fill the transcript uses to follow along, reused as a reveal. */
+@keyframes sweep-in {
+  from {
+    --sweep: 0%;
+  }
+  to {
+    --sweep: 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

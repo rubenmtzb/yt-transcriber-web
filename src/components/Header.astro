@@ -24,14 +24,55 @@ const links = [
     padding: var(--space-4) var(--space-5);
   }
 
+  /* Scale lives on the link and the glow on the image: keeping them on separate elements lets the
+     transition and the pulsing animation coexist without fighting over the same property. */
   .logo {
     display: flex;
     align-items: center;
+    border-radius: var(--radius-md);
+    transition: transform 0.25s ease;
   }
 
   .logo img {
     height: 40px;
     width: auto;
+    transition: filter 0.25s ease;
+  }
+
+  .logo:hover,
+  .logo:focus-visible {
+    transform: scale(1.07);
+  }
+
+  /* drop-shadow rather than box-shadow so the halo traces the mark itself -- the logo is a
+     transparent PNG, and a box-shadow would light up an invisible rectangle around it. */
+  .logo:hover img,
+  .logo:focus-visible img {
+    animation: logo-pulse 1.1s ease-in-out infinite alternate;
+  }
+
+  .logo:active {
+    transform: scale(0.97);
+  }
+
+  @keyframes logo-pulse {
+    from {
+      filter: drop-shadow(0 0 4px rgba(177, 74, 237, 0.35));
+    }
+    to {
+      filter: drop-shadow(0 0 14px rgba(177, 74, 237, 0.9));
+    }
+  }
+
+  /* The blanket reduced-motion rule in global.css only collapses the animation's duration, which
+     would leave the mark stuck on the first keyframe's faint glow. A static halo says "selected"
+     just as clearly without anything moving. */
+  @media (prefers-reduced-motion: reduce) {
+    .logo:hover img,
+    .logo:focus-visible img {
+      animation: none;
+      filter: drop-shadow(0 0 10px rgba(177, 74, 237, 0.8));
+    }
   }
 
   .nav {

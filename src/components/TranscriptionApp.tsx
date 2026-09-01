@@ -1,19 +1,31 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import UrlForm from "./UrlForm";
 import ProcessingState from "./ProcessingState";
 import ErrorState from "./ErrorState";
 import ResultView from "./ResultView";
 import RecentHistory from "./RecentHistory";
-import { createTranscriptionStream, ApiError } from "../services/api";
-import { getHistory, saveToHistory, clearHistory, type HistoryEntry } from "../lib/history";
-import type { ErrorCode, ProcessingStage, TranscriptionResponseDto } from "../types/api";
+import UsagePanel from "./UsagePanel";
+import { createTranscriptionStream, fetchUsage, ApiError } from "../services/api";
+import {
+  getHistory,
+  saveToHistory,
+  clearHistory,
+  findInHistory,
+  rememberPosition,
+  type HistoryEntry,
+} from "../lib/history";
+import { decodeResultFromHash } from "../lib/share";
+import type { ErrorCode, ProcessingStage, TranscriptionResponseDto, UsageSnapshotDto } from "../types/api";
 import styles from "./TranscriptionApp.module.css";
 
 type Phase = "idle" | "processing" | "success" | "error";
 
+// "Sin historial" used to be one of these, which stopped being true once RecentHistory started
+// keeping results in localStorage. Where that history lives is now a claim of its own instead.
 const TRUST_BADGES = [
-  { title: "Sin registro", description: "No cuentas ni historial" },
-  { title: "Sin almacenamiento", description: "Resultado directo" },
+  { title: "Sin registro", description: "No hace falta cuenta" },
+  { title: "Sin base de datos", description: "El servidor no guarda nada" },
+  { title: "Historial local", description: "Solo en este navegador" },
   { title: "Gratis", description: "Con límites de uso" },
 ];
 
@@ -25,7 +37,16 @@ export default function TranscriptionApp() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [prefill, setPrefill] = useState<{ url: string; lang: string } | null>(null);
   const [initialSeekMs, setInitialSeekMs] = useState<number | undefined>(undefined);
+  const [usage, setUsage] = useState<UsageSnapshotDto | null>(null);
   const closeStreamRef = useRef<(() => void) | null>(null);
+  // Mirrors `result` for callbacks that fire outside render: a state updater must stay pure, so
+  // it is not the place to reach for the current value and write to storage from.
+  const resultRef = useRef<TranscriptionResponseDto | null>(null);
+  resultRef.current = result;
+
+  const refreshUsage = useCallback(() => {
+    fetchUsage().then(setUsage);
+  }, []);
 
   function handleSubmit(youtubeUrl: string, targetLanguage: string) {
     closeStreamRef.current?.();
@@ -41,10 +62,12 @@ export default function TranscriptionApp() {
           setPhase("success");
           saveToHistory(response);
           setHistory(getHistory());
+          refreshUsage();
         },
         onError: (err) => {
           setErrorCode(err instanceof ApiError ? err.code : "INTERNAL_ERROR");
           setPhase("error");
+          refreshUsage();
         },
       },
     );
@@ -56,25 +79,44 @@ export default function TranscriptionApp() {
     setResult(null);
     setStage(null);
     setInitialSeekMs(undefined);
+    // Re-read rather than reuse the state: playback has been writing resume positions to storage
+    // since this list was last loaded, and the cards are where those show up.
+    setHistory(getHistory());
   }
 
-  function loadFromHistory(cached: TranscriptionResponseDto) {
+  // Closing the stream only stops us listening: the request the server already started keeps
+  // running to completion (a subprocess mid-flight can't be cancelled cheaply), so the attempt
+  // stays spent. Refreshing the budget afterwards is what keeps the counter honest about that.
+  function cancelProcessing() {
+    reset();
+    refreshUsage();
+  }
+
+  function loadFromHistory(entry: HistoryEntry) {
     closeStreamRef.current?.();
-    setInitialSeekMs(undefined);
-    setResult(cached);
+    setInitialSeekMs(entry.positionMs);
+    setResult(entry.result);
     setPhase("success");
   }
+
+  const handlePositionChange = useCallback((positionMs: number) => {
+    const current = resultRef.current;
+    if (current) {
+      rememberPosition(current.video.id, positionMs, current.video.durationSeconds);
+    }
+  }, []);
 
   function clearHistoryEntries() {
     clearHistory();
     setHistory([]);
   }
 
-  // Deep link support: a shared "?v=<videoId>&t=<seconds>&lang=<code>" URL (see the segment row's
-  // "copiar enlace" action) re-runs the transcription automatically and seeks once it's ready --
-  // there's no server-side result storage to link to directly.
+  // Opening a shared link, cheapest source first. The transcript can come from three places and
+  // only the last one costs anything: the link's own payload (see lib/share), this browser's
+  // history, or -- failing both -- a fresh run that spends one of the few hourly attempts.
   useEffect(() => {
     setHistory(getHistory());
+    refreshUsage();
 
     const params = new URLSearchParams(window.location.search);
     const videoId = params.get("v");
@@ -88,7 +130,23 @@ export default function TranscriptionApp() {
     if (Number.isFinite(seekSeconds) && seekSeconds > 0) {
       setInitialSeekMs(seekSeconds * 1000);
     }
-    handleSubmit(url, lang);
+
+    let cancelled = false;
+    decodeResultFromHash(window.location.hash).then((shared) => {
+      if (cancelled) {
+        return;
+      }
+      const cached = shared ?? findInHistory(videoId, lang);
+      if (cached) {
+        setResult(cached);
+        setPhase("success");
+        return;
+      }
+      handleSubmit(url, lang);
+    });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -112,11 +170,20 @@ export default function TranscriptionApp() {
         />
       )}
 
+      {phase !== "success" && usage && <UsagePanel usage={usage} onExpired={refreshUsage} />}
+
       {phase === "idle" && <RecentHistory entries={history} onSelect={loadFromHistory} onClear={clearHistoryEntries} />}
 
-      {phase === "processing" && <ProcessingState stage={stage} />}
+      {phase === "processing" && <ProcessingState stage={stage} onCancel={cancelProcessing} />}
       {phase === "error" && <ErrorState code={errorCode} onDismiss={reset} />}
-      {phase === "success" && result && <ResultView result={result} onReset={reset} initialSeekMs={initialSeekMs} />}
+      {phase === "success" && result && (
+        <ResultView
+          result={result}
+          onReset={reset}
+          initialSeekMs={initialSeekMs}
+          onPositionChange={handlePositionChange}
+        />
+      )}
 
       {phase === "idle" && (
         <ul className={styles.badges}>
