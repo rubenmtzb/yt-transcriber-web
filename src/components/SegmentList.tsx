@@ -1,50 +1,33 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { SegmentDto } from "../types/api";
-import { foldForSearch, formatTimestamp } from "../lib/segments";
-import styles from "./SegmentList.module.css";
+import { foldForSearch } from "../lib/segments";
+import SegmentRow, { type SegmentListMode } from "./SegmentRow";
+// Shared with SegmentRow: the active-line and reading-mode rules select across both,
+// which a per-component stylesheet could not express once the class names are hashed.
+import styles from "./transcript.module.css";
 
-export type SegmentListMode = "source" | "translated" | "dual";
+export type { SegmentListMode };
 
-interface SegmentListProps {
+/** Everything the three viewers pass straight through, minus what each of them fixes itself. */
+export interface SegmentViewerProps {
   segments: SegmentDto[];
-  mode: SegmentListMode;
-  searchPlaceholder: string;
   onSegmentClick?: (segment: SegmentDto) => void;
   activeSequence?: number | null;
   loopSequence?: number | null;
   onToggleLoop?: (segment: SegmentDto) => void;
   onCopyLink?: (segment: SegmentDto) => void;
   onShareQuote?: (segment: SegmentDto) => void;
+  /** Drops the height cap and enlarges the text for distraction-free reading. */
+  reading?: boolean;
+  /** Player wiring for the read-along sweep. Omit it and lines render as plain text. */
+  currentMs?: number;
+  isPlaying?: boolean;
+  getCurrentMs?: () => number;
 }
 
-function RepeatIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M17 2l4 4-4 4" />
-      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-      <path d="M7 22l-4-4 4-4" />
-      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-    </svg>
-  );
-}
-
-function LinkIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M10 13a5 5 0 0 0 7.07 0l2-2a5 5 0 0 0-7.07-7.07l-1 1" />
-      <path d="M14 11a5 5 0 0 0-7.07 0l-2 2a5 5 0 0 0 7.07 7.07l1-1" />
-    </svg>
-  );
-}
-
-function ImageIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <circle cx="8.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" />
-      <path d="M21 15l-5-5-9 9" />
-    </svg>
-  );
+interface SegmentListProps extends SegmentViewerProps {
+  mode: SegmentListMode;
+  searchPlaceholder: string;
 }
 
 function segmentText(segment: SegmentDto, mode: SegmentListMode): string {
@@ -64,9 +47,33 @@ export default function SegmentList({
   onToggleLoop,
   onCopyLink,
   onShareQuote,
+  reading = false,
+  currentMs = 0,
+  isPlaying = false,
+  getCurrentMs,
 }: SegmentListProps) {
   const [query, setQuery] = useState("");
+  const [following, setFollowing] = useState(true);
   const rowRefs = useRef(new Map<number, HTMLLIElement>());
+
+  // A drag that ended up selecting text is someone copying a quote, not asking to jump there.
+  const handleRowClick = useCallback(
+    (segment: SegmentDto) => {
+      if (window.getSelection()?.toString()) {
+        return;
+      }
+      onSegmentClick?.(segment);
+    },
+    [onSegmentClick],
+  );
+
+  const registerRow = useCallback((sequence: number, node: HTMLLIElement | null) => {
+    if (node) {
+      rowRefs.current.set(sequence, node);
+    } else {
+      rowRefs.current.delete(sequence);
+    }
+  }, []);
 
   const filtered = useMemo(() => {
     const normalized = foldForSearch(query.trim());
@@ -76,15 +83,65 @@ export default function SegmentList({
     return segments.filter((segment) => foldForSearch(segmentText(segment, mode)).includes(normalized));
   }, [segments, mode, query]);
 
+  // Following the video is the default, but it has to yield: scrolling up to re-read something
+  // only to be dragged back on the next line is worse than losing the follow.
+  //
+  // What counts as "the reader scrolled" is taken from input events, not from scroll events. A
+  // scroll event says nothing about who caused it, and the obvious workaround -- ignore scrolls
+  // for a moment after scrolling ourselves -- cannot work: a smooth scroll across a long list runs
+  // for ~800ms and fires ~50 events, so any fixed window leaves most of our own animation looking
+  // like the reader, and the follow switched itself off exactly when the list first had to move.
+  const listRef = useRef<HTMLUListElement>(null);
+
   useEffect(() => {
-    if (activeSequence === null) {
+    const list = listRef.current;
+    if (!list) {
       return;
     }
-    rowRefs.current.get(activeSequence)?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [activeSequence]);
+    const stopFollowing = () => setFollowing(false);
+    // A scrollbar drag produces no wheel event; it lands on the list itself, past its content box.
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.target === list && event.offsetX > list.clientWidth) {
+        stopFollowing();
+      }
+    };
+
+    list.addEventListener("wheel", stopFollowing, { passive: true });
+    list.addEventListener("touchmove", stopFollowing, { passive: true });
+    list.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      list.removeEventListener("wheel", stopFollowing);
+      list.removeEventListener("touchmove", stopFollowing);
+      list.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    const list = listRef.current;
+    const row = activeSequence === null ? null : rowRefs.current.get(activeSequence);
+    if (!list || !row || !following) {
+      return;
+    }
+
+    // Only move once the line has drifted past the comfortable band, and then place it a third of
+    // the way down rather than at whichever edge is nearest. Pinning it to the bottom edge -- what
+    // scrollIntoView({ block: "nearest" }) does once the list starts scrolling -- means the lines
+    // about to be spoken are always off-screen, which is the opposite of reading along.
+    const offsetTop = row.offsetTop - list.offsetTop;
+    const relative = offsetTop - list.scrollTop;
+    const withinComfortBand = relative >= 0 && relative + row.offsetHeight <= list.clientHeight * 0.65;
+    if (withinComfortBand) {
+      return;
+    }
+    list.scrollTo({ top: Math.max(0, offsetTop - list.clientHeight / 3), behavior: "smooth" });
+  }, [activeSequence, following]);
+
+  function resumeFollowing() {
+    setFollowing(true);
+  }
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-reading={reading}>
       <input
         type="search"
         className={styles.search}
@@ -93,69 +150,37 @@ export default function SegmentList({
         onChange={(event) => setQuery(event.target.value)}
         aria-label={searchPlaceholder}
       />
-      <ul className={styles.list}>
-        {filtered.map((segment) => (
-          <li
-            key={segment.sequence}
-            className={styles.row}
-            data-active={segment.sequence === activeSequence}
-            ref={(node) => {
-              if (node) {
-                rowRefs.current.set(segment.sequence, node);
-              } else {
-                rowRefs.current.delete(segment.sequence);
-              }
-            }}
-          >
-            <button
-              type="button"
-              className={styles.rowButton}
-              onClick={() => onSegmentClick?.(segment)}
-              disabled={!onSegmentClick}
-            >
-              <span className={styles.timestamp}>{formatTimestamp(segment.startMs)}</span>
-              {mode === "dual" ? (
-                <span className={styles.dualText}>
-                  <span className={styles.text}>{segment.sourceText}</span>
-                  <span className={styles.textTranslated}>{segment.translatedText}</span>
-                </span>
-              ) : (
-                <span className={styles.text}>{mode === "translated" ? segment.translatedText : segment.sourceText}</span>
-              )}
-            </button>
+      {!following && activeSequence !== null && (
+        <button type="button" className={styles.resume} onClick={resumeFollowing}>
+          Volver a la línea actual
+        </button>
+      )}
 
-            <div className={styles.rowActions}>
-              <button
-                type="button"
-                className={styles.actionButton}
-                data-active={segment.sequence === loopSequence}
-                onClick={() => onToggleLoop?.(segment)}
-                aria-label="Repetir esta línea en bucle"
-                title="Repetir en bucle"
-              >
-                <RepeatIcon />
-              </button>
-              <button
-                type="button"
-                className={styles.actionButton}
-                onClick={() => onCopyLink?.(segment)}
-                aria-label="Copiar enlace a este momento"
-                title="Copiar enlace a este momento"
-              >
-                <LinkIcon />
-              </button>
-              <button
-                type="button"
-                className={styles.actionButton}
-                onClick={() => onShareQuote?.(segment)}
-                aria-label="Descargar esta línea como imagen"
-                title="Descargar como imagen"
-              >
-                <ImageIcon />
-              </button>
-            </div>
-          </li>
-        ))}
+      <ul className={styles.list} ref={listRef}>
+        {filtered.map((segment) => {
+          const isActive = segment.sequence === activeSequence;
+          return (
+            <SegmentRow
+              key={segment.sequence}
+              segment={segment}
+              mode={mode}
+              isActive={isActive}
+              isLooping={segment.sequence === loopSequence}
+              query={query}
+              // Only the active line is given the moving position; every other row keeps a
+              // constant 0 so its props stay equal and the memo can skip it.
+              currentMs={isActive ? currentMs : 0}
+              isPlaying={isActive ? isPlaying : false}
+              getCurrentMs={getCurrentMs}
+              onSelect={handleRowClick}
+              onToggleLoop={onToggleLoop}
+              onCopyLink={onCopyLink}
+              onShareQuote={onShareQuote}
+              registerRow={registerRow}
+              clickable={Boolean(onSegmentClick)}
+            />
+          );
+        })}
         {filtered.length === 0 && <li className={styles.empty}>Sin resultados para "{query}".</li>}
       </ul>
     </div>

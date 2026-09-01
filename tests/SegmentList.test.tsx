@@ -24,8 +24,23 @@ describe("SegmentList", () => {
 
     await user.type(screen.getByPlaceholderText("Buscar..."), "COMO");
 
-    expect(screen.getByText("Cómo estás")).toBeInTheDocument();
-    expect(screen.queryByText("Hola a todos")).not.toBeInTheDocument();
+    // Matched text is split across a <mark>, so the row is asserted as a whole.
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    expect(screen.getByRole("listitem")).toHaveTextContent("Cómo estás");
+  });
+
+  it("highlights the matching run, ignoring case and accents", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />,
+    );
+
+    await user.type(screen.getByPlaceholderText("Buscar..."), "COMO");
+
+    const marks = [...container.querySelectorAll("mark")];
+    expect(marks).toHaveLength(1);
+    // The original accent survives: matching folds the text, the slice comes off the real string.
+    expect(marks[0]).toHaveTextContent("Cómo");
   });
 
   it("shows an empty-state message when nothing matches", async () => {
@@ -54,10 +69,50 @@ describe("SegmentList", () => {
     expect(onSegmentClick).toHaveBeenCalledExactlyOnceWith(SEGMENTS[1]);
   });
 
-  it("renders the seek buttons as disabled, non-clickable when no onSegmentClick is given", () => {
+  it("renders the timestamp seek buttons as disabled when no onSegmentClick is given", () => {
     render(<SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
 
-    expect(screen.getByText("Hola a todos").closest("button")).toBeDisabled();
-    expect(screen.getByText("Cómo estás").closest("button")).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Saltar a 00:00" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Saltar a 00:01" })).toBeDisabled();
+  });
+
+  it("seeks from the timestamp button, so the line is reachable by keyboard", async () => {
+    const user = userEvent.setup();
+    const onSegmentClick = vi.fn();
+    render(
+      <SegmentList
+        segments={SEGMENTS}
+        mode="translated"
+        searchPlaceholder="Buscar..."
+        onSegmentClick={onSegmentClick}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Saltar a 00:01" }));
+
+    expect(onSegmentClick).toHaveBeenCalledExactlyOnceWith(SEGMENTS[1]);
+  });
+
+  it("does not seek when the click ends a text selection, so quotes can be copied", async () => {
+    const user = userEvent.setup();
+    const onSegmentClick = vi.fn();
+    render(
+      <SegmentList
+        segments={SEGMENTS}
+        mode="translated"
+        searchPlaceholder="Buscar..."
+        onSegmentClick={onSegmentClick}
+      />,
+    );
+
+    // Stubbed rather than driven through a real drag: jsdom does not model selection well enough
+    // for a synthesised mouse drag to leave text selected.
+    const selection = vi.spyOn(window, "getSelection");
+    selection.mockReturnValue({ toString: () => "Cómo est" } as Selection);
+
+    await user.click(screen.getByText("Cómo estás"));
+
+    expect(onSegmentClick).not.toHaveBeenCalled();
+    selection.mockRestore();
   });
 });
