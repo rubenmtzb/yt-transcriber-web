@@ -1,0 +1,141 @@
+.container {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  text-align: left;
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-muted);
+  transition: color 0.2s ease;
+}
+
+/* Rail joining each dot to the next, so the list reads as one run rather than five bullets. It
+   turns solid behind the steps already finished. */
+.step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  width: 2px;
+  height: calc(100% + var(--space-3));
+  background: var(--color-structure);
+  transition: background-color 0.3s ease;
+}
+
+.step[data-state="done"]:not(:last-child)::before {
+  background: var(--color-success);
+}
+
+.step[data-state="active"] {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.step[data-state="done"] {
+  color: var(--color-text-muted);
+}
+
+.dot {
+  position: relative;
+  z-index: 1;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-structure);
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.step[data-state="active"] .dot {
+  background: var(--color-accent-1);
+  transform: scale(1.3);
+  animation: dot-pulse 1.4s ease-out infinite;
+}
+
+/* The halo is the only thing in the app that says "still working" -- everything else about a
+   synchronous request looks identical whether it's running or stuck. */
+@keyframes dot-pulse {
+  from {
+    box-shadow: 0 0 0 0 rgba(177, 74, 237, 0.55);
+  }
+  to {
+    box-shadow: 0 0 0 10px rgba(177, 74, 237, 0);
+  }
+}
+
+.step[data-state="active"] .label {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-accent-1) 0 var(--sweep),
+    var(--color-text) var(--sweep) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: sweepIn 1.6s ease-in-out infinite alternate;
+}
+
+.step[data-state="done"] .dot {
+  background: var(--color-success);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.elapsed {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+
+.cancel {
+  margin-left: auto;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.cancel:hover {
+  border-color: var(--color-danger);
+  color: var(--color-text);
+}
+
+.note {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+/* Local copy: see the note in TranscriptionApp.module.css. */
+@keyframes sweepIn {
+  from {
+    --sweep: 0%;
+  }
+  to {
+    --sweep: 100%;
+  }
+}
