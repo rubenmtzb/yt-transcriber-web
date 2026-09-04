@@ -1,50 +1,63 @@
-# YT Transcriber Web
+<div align="center">
 
-Frontend for YT Transcriber: paste a YouTube URL, pick a language, get the transcript and its translation.
+<img src="docs/hero.svg" alt="YT Transcriber" width="100%">
 
-## Overview
+[![CI](https://github.com/rubenmtzb/yt-transcriber-web/actions/workflows/ci.yml/badge.svg)](https://github.com/rubenmtzb/yt-transcriber-web/actions/workflows/ci.yml)
+[![Astro](https://img.shields.io/badge/Astro-7-BC52EE?logo=astro&logoColor=white)](https://astro.build)
+[![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![License](https://img.shields.io/badge/license-MIT-9a94b8)](LICENSE)
 
-A single-page, no-login web app. It talks to `yt-transcriber-api` over a plain JSON contract and never touches provider API keys — those live only in the backend. Nothing gets stored client-side beyond what the browser needs to render the current result.
+**[Try it live](https://yt.rubenitx.me)** · **[Backend repository](https://github.com/rubenmtzb/yt-transcriber-api)**
+
+</div>
+
+## What it does
+
+Paste a YouTube URL, pick a language, and read the video as text while it plays. No account, no
+signup, nothing stored on a server.
+
+<img src="docs/demo.gif" alt="Pasting a YouTube URL and getting a timed, translated transcript back" width="100%">
+
+<sub>Recorded against <a href="https://yt.rubenitx.me">yt.rubenitx.me</a>. Not sped up.</sub>
+
+### Dual view
+
+Original and translation on the same line, so a reader can check the translation against what was
+actually said.
+
+<img src="docs/dual-view.png" alt="Dual view showing a German original beside its Spanish translation, line by line" width="100%">
 
 ## Features
 
-- Landing screen: URL input with client-side validation, target-language select, trust badges.
-- Live progress: the backend streams its stage over SSE, shown as a step-by-step checklist.
-- Result screen: transcript / translation / dual-language tabs, per-segment search
-  (accent-insensitive), copy to clipboard and `.txt` / `.srt` download.
-- Embedded player with custom controls (play/pause, seek bar, playback speed, mute) — the
-  segment being spoken is highlighted and kept in view as the video plays, and clicking any
-  segment jumps the player to that moment.
-- Per-segment actions: loop a line, copy a deep link to that exact moment
-  (`?v=<id>&t=<seconds>&lang=<code>`, auto-plays and seeks on open), or export it as a shareable
-  quote-card image.
-- Keyboard shortcuts while viewing a result: space to play/pause, ←/→ to seek, ↑/↓ to jump a
-  segment, M to mute, L to loop the current line.
-- Recent-history strip (kept in `localStorage`, last 5 videos) for reopening a result instantly
-  without re-spending the session's rate-limit budget.
-- Error states mapped one-to-one from the backend's error envelope.
-- Responsive layout (desktop/tablet/mobile) and a reduced-motion path throughout.
+- URL input with client-side validation and a target-language select.
+- Live progress over SSE while the backend works, shown as a step-by-step checklist.
+- Transcript, translation and dual-language tabs, with accent-insensitive search.
+- Downloads in TXT, SRT, VTT and Markdown.
+- Embedded player with custom controls. The line being spoken stays highlighted and in view, and
+  clicking any line seeks the video to it.
+- Per-line actions: loop it, copy a deep link to that moment
+  (`?v=<id>&t=<seconds>&lang=<code>`), or export it as a quote-card image.
+- Keyboard shortcuts: space to play, arrows to seek and move between lines, `M` to mute, `L` to loop.
+- Recent history in `localStorage`, so reopening a result costs nothing against the rate limit.
+- Responsive, with a reduced-motion path throughout.
 
-## Architecture
+## How it fits with the backend
 
-```text
-Browser
-   |
-Astro (static) + React islands
-   | fetch, JSON
-Spring Boot API (yt-transcriber-api)
-```
+This repository is the frontend. It has no server-side logic: everything it shows comes from the
+API's HTTP contract.
 
-Astro renders the static shell; React is used only for the interactive parts (the form, the processing state, the result viewer). The frontend has no server-side logic of its own — everything it shows comes from the backend's HTTP contract.
+| | Repository | Runs on |
+|---|---|---|
+| **Web** | this one | Cloudflare Pages |
+| **API** | [yt-transcriber-api](https://github.com/rubenmtzb/yt-transcriber-api) | Docker, home server |
 
-## Tech Stack
+One variable joins them, `PUBLIC_API_BASE_URL`. No shared code and no shared database, so pointing
+this app at a locally running API is a one-line change.
 
-- Astro 7 (static output)
-- React 19 (islands)
-- TypeScript (strict)
-- Plain CSS with design tokens (no CSS framework — the design system is intentionally small)
+<img src="docs/architecture.svg" alt="Browser, Cloudflare and the home server, and why the API runs at home" width="100%">
 
-## Getting Started
+## Getting started
 
 ```bash
 npm install
@@ -53,6 +66,9 @@ npm run check     # type-check
 npm run test      # unit + component tests
 npm run build     # static output to dist/
 ```
+
+You also need `yt-transcriber-api` running and reachable at `PUBLIC_API_BASE_URL`. Its README covers
+that side.
 
 ### Docker
 
@@ -65,58 +81,46 @@ docker run -p 8080:80 yt-transcriber-web
 
 Copy `.env.example` to `.env`:
 
-| Variable                 | Default                  | Description                          |
-|---------------------------|---------------------------|----------------------------------------|
-| `PUBLIC_API_BASE_URL`     | `http://localhost:8080`  | Base URL of the `yt-transcriber-api` backend |
+| Variable | Default | Description |
+|---|---|---|
+| `PUBLIC_API_BASE_URL` | `http://localhost:8080` | Base URL of the backend |
 
-`PUBLIC_`-prefixed variables are the only ones exposed to the browser bundle (Astro/Vite convention) — never put a secret behind this prefix.
+Only `PUBLIC_`-prefixed variables reach the browser bundle (Astro/Vite convention). Never put a
+secret behind that prefix.
 
-## Project Structure
+> [!IMPORTANT]
+> The API host is pinned in two places and both must agree: `PUBLIC_API_BASE_URL`, which the bundle
+> inlines at build time, and the `connect-src` directive in [`public/_headers`](public/_headers).
+> Change one without the other and the browser blocks every call while `curl` against the API keeps
+> working, which makes the cause hard to see. After moving the backend, check the deployed response
+> headers.
+
+## Project structure
 
 ```text
 src/
-  components/     React islands (TranscriptionApp orchestrates the phases; UrlForm,
-                  ProcessingState, ErrorState, ResultView, VideoPlayer, SegmentList,
-                  TranscriptViewer / TranslationViewer / DualViewer, RecentHistory) plus the
-                  static Header/Footer Astro partials. Styles live next to each component as
-                  a *.module.css file.
-  layouts/        BaseLayout.astro
-  pages/          index.astro, como-funciona.astro, privacidad.astro
-  services/       api.ts — SSE client for the transcription stream
-  lib/            segments.ts — pure segment helpers (formatting, SRT, search folding)
-                  history.ts — localStorage-backed recent-history cache
-                  quoteCard.ts — canvas-rendered shareable quote-card image
-                  each unit-tested in isolation
-  types/          api.ts — request/response/error DTOs, matching the backend exactly
-                  youtube.d.ts — typings for the YouTube IFrame Player API surface this app uses
-  styles/         global.css — design tokens (colors, spacing) and reset
-tests/            Vitest + Testing Library, mirroring src/
+  components/   React islands. TranscriptionApp drives the phases; UrlForm, ProcessingState,
+                ErrorState, ResultView, VideoPlayer, SegmentList, the three viewers and
+                RecentHistory hang off it. Header and Footer are static Astro partials.
+                Styles sit next to each component as a *.module.css file.
+  layouts/      BaseLayout.astro
+  pages/        index, como-funciona, privacidad, 404
+  services/     api.ts, the SSE client
+  lib/          segments.ts (formatting, SRT/VTT/Markdown, search folding), history.ts,
+                quoteCard.ts, share.ts. Each unit-tested on its own.
+  types/        api.ts, mirroring the backend DTOs exactly
+  styles/       global.css, design tokens and reset
+tests/          Vitest + Testing Library, mirroring src/
 ```
 
-State lives in `TranscriptionApp` as a single `phase` (`idle` → `processing` → `success` |
-`error`), plus the recent-history list and an optional deep-link prefill; every other component
-is driven by props, which keeps the interactive surface testable without mounting the whole app.
-`ResultView` owns per-result UI state (active tab, loop segment, playback position) and the
-keyboard-shortcut listener.
+`TranscriptionApp` holds a single `phase` (`idle` → `processing` → `success` | `error`) plus the
+history list and an optional deep-link prefill. Everything below it is driven by props, which keeps
+the interactive surface testable without mounting the whole app.
 
-## Related Repository
+## Deployment
 
-Backend: [yt-transcriber-api](https://github.com/rubenmtzb/yt-transcriber-api)
-
-## Live Demo
-
-<https://yt.rubenitx.me> — a static build on Cloudflare Pages, deployed from `main` on every push.
-It talks to <https://yt-api.rubenitx.me>.
-
-The API host is pinned in **two** places and both have to agree, or the browser blocks every call
-while the code reads as perfectly correct:
-
-- `PUBLIC_API_BASE_URL`, the build variable the bundle inlines (see the table above);
-- the `connect-src` directive in [`public/_headers`](public/_headers), which Pages serves as the
-  Content-Security-Policy.
-
-A mismatch fails only in a browser — `curl` against the API keeps working — so it is worth checking
-the deployed response headers rather than the source after moving the backend.
+Static build on Cloudflare Pages, deployed from `main` on every push, serving
+<https://yt.rubenitx.me>.
 
 ## License
 
