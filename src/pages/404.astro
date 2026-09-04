@@ -1,0 +1,64 @@
+---
+// Without this page Astro emits no 404.html, and Cloudflare Pages answers an unknown path with
+// the homepage under a 200. That reads as "the site worked" to someone who mistyped a URL and,
+// worse, to a crawler: every wrong path becomes another copy of the homepage in the index.
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Header from "../components/Header.astro";
+---
+
+<BaseLayout
+  title="Página no encontrada — YT Transcriber"
+  description="La página que buscas no existe."
+>
+  <Header />
+  <main class="content">
+    <p class="code">404</p>
+    <h1>Esta página no existe</h1>
+    <p class="lead">Puede que el enlace esté mal escrito o que la página se haya movido.</p>
+    <a class="action" href="/">Volver al inicio</a>
+  </main>
+</BaseLayout>
+
+<style>
+  .content {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4);
+    text-align: center;
+  }
+
+  .code {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: var(--color-text-muted);
+  }
+
+  h1 {
+    margin: var(--space-2) 0 0;
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    line-height: 1.2;
+  }
+
+  .lead {
+    margin: var(--space-3) 0 var(--space-5);
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .action {
+    display: inline-block;
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .action:hover {
+    border-color: var(--color-accent-1);
+  }
+</style>

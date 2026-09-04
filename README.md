@@ -105,7 +105,18 @@ Backend: [yt-transcriber-api](https://github.com/rubenmtzb/yt-transcriber-api)
 
 ## Live Demo
 
-Not deployed yet.
+<https://yt.rubenitx.me> — a static build on Cloudflare Pages, deployed from `main` on every push.
+It talks to <https://yt-api.rubenitx.me>.
+
+The API host is pinned in **two** places and both have to agree, or the browser blocks every call
+while the code reads as perfectly correct:
+
+- `PUBLIC_API_BASE_URL`, the build variable the bundle inlines (see the table above);
+- the `connect-src` directive in [`public/_headers`](public/_headers), which Pages serves as the
+  Content-Security-Policy.
+
+A mismatch fails only in a browser — `curl` against the API keeps working — so it is worth checking
+the deployed response headers rather than the source after moving the backend.
 
 ## License
 
