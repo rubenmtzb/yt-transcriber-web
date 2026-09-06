@@ -1,0 +1,5 @@
+# The Spanish pages moved under /es/ when English became the default. These paths are what any
+# existing link points at, so they redirect rather than 404 -- 301, so a search engine moves the
+# indexed page across instead of keeping both.
+/como-funciona   /es/como-funciona/   301
+/privacidad      /es/privacidad/      301

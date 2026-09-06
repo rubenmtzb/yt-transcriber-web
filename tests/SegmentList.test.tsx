@@ -11,7 +11,7 @@ const SEGMENTS: SegmentDto[] = [
 
 describe("SegmentList", () => {
   it("renders every segment's timestamp and text for the given mode", () => {
-    render(<SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
+    render(<SegmentList lang="en" segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
 
     expect(screen.getByText("Hola a todos")).toBeInTheDocument();
     expect(screen.getByText("Cómo estás")).toBeInTheDocument();
@@ -20,7 +20,7 @@ describe("SegmentList", () => {
 
   it("filters to matching segments as the user types, case-insensitively", async () => {
     const user = userEvent.setup();
-    render(<SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
+    render(<SegmentList lang="en" segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
 
     await user.type(screen.getByPlaceholderText("Buscar..."), "COMO");
 
@@ -32,7 +32,7 @@ describe("SegmentList", () => {
   it("highlights the matching run, ignoring case and accents", async () => {
     const user = userEvent.setup();
     const { container } = render(
-      <SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />,
+      <SegmentList lang="en" segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />,
     );
 
     await user.type(screen.getByPlaceholderText("Buscar..."), "COMO");
@@ -45,19 +45,18 @@ describe("SegmentList", () => {
 
   it("shows an empty-state message when nothing matches", async () => {
     const user = userEvent.setup();
-    render(<SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
+    render(<SegmentList lang="en" segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
 
     await user.type(screen.getByPlaceholderText("Buscar..."), "xyzxyz");
 
-    expect(screen.getByText(/sin resultados/i)).toBeInTheDocument();
+    expect(screen.getByText(/no results/i)).toBeInTheDocument();
   });
 
   it("calls onSegmentClick with the clicked segment", async () => {
     const user = userEvent.setup();
     const onSegmentClick = vi.fn();
     render(
-      <SegmentList
-        segments={SEGMENTS}
+      <SegmentList lang="en"         segments={SEGMENTS}
         mode="translated"
         searchPlaceholder="Buscar..."
         onSegmentClick={onSegmentClick}
@@ -70,25 +69,24 @@ describe("SegmentList", () => {
   });
 
   it("renders the timestamp seek buttons as disabled when no onSegmentClick is given", () => {
-    render(<SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
+    render(<SegmentList lang="en" segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." />);
 
-    expect(screen.getByRole("button", { name: "Saltar a 00:00" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Saltar a 00:01" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Jump to 00:00" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Jump to 00:01" })).toBeDisabled();
   });
 
   it("seeks from the timestamp button, so the line is reachable by keyboard", async () => {
     const user = userEvent.setup();
     const onSegmentClick = vi.fn();
     render(
-      <SegmentList
-        segments={SEGMENTS}
+      <SegmentList lang="en"         segments={SEGMENTS}
         mode="translated"
         searchPlaceholder="Buscar..."
         onSegmentClick={onSegmentClick}
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Saltar a 00:01" }));
+    await user.click(screen.getByRole("button", { name: "Jump to 00:01" }));
 
     expect(onSegmentClick).toHaveBeenCalledExactlyOnceWith(SEGMENTS[1]);
   });
@@ -97,8 +95,7 @@ describe("SegmentList", () => {
     const user = userEvent.setup();
     const onSegmentClick = vi.fn();
     render(
-      <SegmentList
-        segments={SEGMENTS}
+      <SegmentList lang="en"         segments={SEGMENTS}
         mode="translated"
         searchPlaceholder="Buscar..."
         onSegmentClick={onSegmentClick}
@@ -118,7 +115,7 @@ describe("SegmentList", () => {
 
   it("marks the segment matching activeSequence as the current one", () => {
     render(
-      <SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." activeSequence={1} />,
+      <SegmentList lang="en" segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." activeSequence={1} />,
     );
 
     expect(screen.getByText("Cómo estás").closest("li")).toHaveAttribute("data-active", "true");
@@ -127,7 +124,7 @@ describe("SegmentList", () => {
 
   it("marks no row as active when nothing is playing", () => {
     render(
-      <SegmentList segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." activeSequence={null} />,
+      <SegmentList lang="en" segments={SEGMENTS} mode="translated" searchPlaceholder="Buscar..." activeSequence={null} />,
     );
 
     expect(document.querySelector('[data-active="true"]')).toBeNull();

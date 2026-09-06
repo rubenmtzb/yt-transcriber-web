@@ -16,7 +16,7 @@ const ALL_CODES: ErrorCode[] = [
 
 describe("ErrorState", () => {
   it.each(ALL_CODES)("renders a non-empty title, description and action for %s", (code) => {
-    render(<ErrorState code={code} onDismiss={() => {}} />);
+    render(<ErrorState lang="en" code={code} onDismiss={() => {}} />);
 
     const alert = screen.getByRole("alert");
     expect(alert.textContent?.trim().length).toBeGreaterThan(0);
@@ -24,7 +24,7 @@ describe("ErrorState", () => {
   });
 
   it("never leaks the raw backend error code as user-facing text", () => {
-    render(<ErrorState code="PROVIDER_UNAVAILABLE" onDismiss={() => {}} />);
+    render(<ErrorState lang="en" code="PROVIDER_UNAVAILABLE" onDismiss={() => {}} />);
 
     expect(screen.queryByText("PROVIDER_UNAVAILABLE")).not.toBeInTheDocument();
   });
@@ -32,7 +32,7 @@ describe("ErrorState", () => {
   it("calls onDismiss when the action button is clicked", async () => {
     const user = userEvent.setup();
     const onDismiss = vi.fn();
-    render(<ErrorState code="VIDEO_TOO_LONG" onDismiss={onDismiss} />);
+    render(<ErrorState lang="en" code="VIDEO_TOO_LONG" onDismiss={onDismiss} />);
 
     await user.click(screen.getByRole("button"));
 

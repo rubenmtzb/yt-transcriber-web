@@ -16,20 +16,23 @@ import {
 } from "../lib/history";
 import { decodeResultFromHash } from "../lib/share";
 import type { ErrorCode, ProcessingStage, TranscriptionResponseDto, UsageSnapshotDto } from "../types/api";
+import { useTranslations } from "../i18n/ui";
+import type { Lang } from "../i18n/config";
 import styles from "./TranscriptionApp.module.css";
 
 type Phase = "idle" | "processing" | "success" | "error";
 
-// "Sin historial" used to be one of these, which stopped being true once RecentHistory started
+// "No history" used to be one of these, which stopped being true once RecentHistory started
 // keeping results in localStorage. Where that history lives is now a claim of its own instead.
-const TRUST_BADGES = [
-  { title: "Sin registro", description: "No hace falta cuenta" },
-  { title: "Sin base de datos", description: "El servidor no guarda nada" },
-  { title: "Historial local", description: "Solo en este navegador" },
-  { title: "Gratis", description: "Con límites de uso" },
-];
+const TRUST_BADGES = ["noSignup", "noDatabase", "localHistory", "free"] as const;
 
-export default function TranscriptionApp() {
+interface TranscriptionAppProps {
+  /** Set by the page that mounts this island, which is the only place that knows the route. */
+  lang: Lang;
+}
+
+export default function TranscriptionApp({ lang }: TranscriptionAppProps) {
+  const t = useTranslations(lang);
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<TranscriptionResponseDto | null>(null);
   const [errorCode, setErrorCode] = useState<ErrorCode>("INTERNAL_ERROR");
@@ -114,6 +117,8 @@ export default function TranscriptionApp() {
   // Opening a shared link, cheapest source first. The transcript can come from three places and
   // only the last one costs anything: the link's own payload (see lib/share), this browser's
   // history, or -- failing both -- a fresh run that spends one of the few hourly attempts.
+  const defaultTargetLanguage = lang === "es" ? "es" : "en";
+
   useEffect(() => {
     setHistory(getHistory());
     refreshUsage();
@@ -123,10 +128,10 @@ export default function TranscriptionApp() {
     if (!videoId) {
       return;
     }
-    const lang = params.get("lang") ?? "es";
+    const targetLanguage = params.get("lang") ?? defaultTargetLanguage;
     const seekSeconds = Number(params.get("t"));
     const url = `https://www.youtube.com/watch?v=${videoId}`;
-    setPrefill({ url, lang });
+    setPrefill({ url, lang: targetLanguage });
     if (Number.isFinite(seekSeconds) && seekSeconds > 0) {
       setInitialSeekMs(seekSeconds * 1000);
     }
@@ -136,13 +141,13 @@ export default function TranscriptionApp() {
       if (cancelled) {
         return;
       }
-      const cached = shared ?? findInHistory(videoId, lang);
+      const cached = shared ?? findInHistory(videoId, targetLanguage);
       if (cached) {
         setResult(cached);
         setPhase("success");
         return;
       }
-      handleSubmit(url, lang);
+      handleSubmit(url, targetLanguage);
     });
     return () => {
       cancelled = true;
@@ -155,29 +160,31 @@ export default function TranscriptionApp() {
       {phase === "idle" && (
         <>
           <h1 className={styles.headline}>
-            Transcribe y traduce <span className={styles.accent}>vídeos de YouTube</span>
+            {t("hero.lead")} <span className={styles.accent}>{t("hero.accent")}</span>
           </h1>
-          <p className={styles.subtext}>Texto limpio, traducción y resultado inmediato.</p>
+          <p className={styles.subtext}>{t("hero.subtext")}</p>
         </>
       )}
 
       {phase !== "success" && (
         <UrlForm
+          lang={lang}
           onSubmit={handleSubmit}
           disabled={phase === "processing"}
           initialUrl={prefill?.url}
-          initialTargetLanguage={prefill?.lang}
+          initialTargetLanguage={prefill?.lang ?? defaultTargetLanguage}
         />
       )}
 
-      {phase !== "success" && usage && <UsagePanel usage={usage} onExpired={refreshUsage} />}
+      {phase !== "success" && usage && <UsagePanel lang={lang} usage={usage} onExpired={refreshUsage} />}
 
-      {phase === "idle" && <RecentHistory entries={history} onSelect={loadFromHistory} onClear={clearHistoryEntries} />}
+      {phase === "idle" && <RecentHistory lang={lang} entries={history} onSelect={loadFromHistory} onClear={clearHistoryEntries} />}
 
-      {phase === "processing" && <ProcessingState stage={stage} onCancel={cancelProcessing} />}
-      {phase === "error" && <ErrorState code={errorCode} onDismiss={reset} />}
+      {phase === "processing" && <ProcessingState lang={lang} stage={stage} onCancel={cancelProcessing} />}
+      {phase === "error" && <ErrorState lang={lang} code={errorCode} onDismiss={reset} />}
       {phase === "success" && result && (
         <ResultView
+          lang={lang}
           result={result}
           onReset={reset}
           initialSeekMs={initialSeekMs}
@@ -188,9 +195,9 @@ export default function TranscriptionApp() {
       {phase === "idle" && (
         <ul className={styles.badges}>
           {TRUST_BADGES.map((badge) => (
-            <li key={badge.title}>
-              <strong>{badge.title}</strong>
-              <span>{badge.description}</span>
+            <li key={badge}>
+              <strong>{t(`badge.${badge}.title`)}</strong>
+              <span>{t(`badge.${badge}.body`)}</span>
             </li>
           ))}
         </ul>

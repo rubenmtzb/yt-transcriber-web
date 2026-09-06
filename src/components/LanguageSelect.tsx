@@ -1,4 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
+import { useTranslations } from "../i18n/ui";
+import type { Lang } from "../i18n/config";
 import styles from "./LanguageSelect.module.css";
 
 export interface LanguageOption {
@@ -17,6 +19,7 @@ export const SUPPORTED_TARGET_LANGUAGES: LanguageOption[] = [
 ];
 
 interface LanguageSelectProps {
+  lang: Lang;
   id?: string;
   /**
    * Id of the visible field label. A <label for> doesn't name a button the way it names an input,
@@ -53,7 +56,8 @@ function CheckIcon() {
  * option is pointed at with aria-activedescendant -- so keyboard and screen-reader behaviour
  * survives dropping the native control.
  */
-export default function LanguageSelect({ id, labelId, value, onChange, disabled = false }: LanguageSelectProps) {
+export default function LanguageSelect({ lang, id, labelId, value, onChange, disabled = false }: LanguageSelectProps) {
+  const t = useTranslations(lang);
   const generatedId = useId();
   const baseId = id ?? generatedId;
   const listboxId = `${baseId}-listbox`;
@@ -176,21 +180,21 @@ export default function LanguageSelect({ id, labelId, value, onChange, disabled 
       </button>
 
       {open && (
-        <ul className={styles.list} id={listboxId} role="listbox" aria-label="Idioma de traducción">
-          {SUPPORTED_TARGET_LANGUAGES.map((lang, index) => (
+        <ul className={styles.list} id={listboxId} role="listbox" aria-label={t("form.languageList")}>
+          {SUPPORTED_TARGET_LANGUAGES.map((option, index) => (
             <li
-              key={lang.code}
-              id={optionId(lang.code)}
+              key={option.code}
+              id={optionId(option.code)}
               className={styles.option}
               role="option"
-              aria-selected={lang.code === value}
+              aria-selected={option.code === value}
               data-active={index === activeIndex}
               style={{ "--index": index } as React.CSSProperties}
               onPointerEnter={() => setActiveIndex(index)}
               onClick={() => pick(index)}
             >
-              <span className={styles.check}>{lang.code === value && <CheckIcon />}</span>
-              {lang.label}
+              <span className={styles.check}>{option.code === value && <CheckIcon />}</span>
+              {option.label}
             </li>
           ))}
         </ul>

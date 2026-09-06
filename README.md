@@ -40,6 +40,7 @@ actually said.
   (`?v=<id>&t=<seconds>&lang=<code>`), or export it as a quote-card image.
 - Keyboard shortcuts: space to play, arrows to seek and move between lines, `M` to mute, `L` to loop.
 - Recent history in `localStorage`, so reopening a result costs nothing against the rate limit.
+- English and Spanish, on real routes (`/` and `/es/`) rather than a client-side toggle.
 - Responsive, with a reduced-motion path throughout.
 - A Content-Security-Policy and the rest of the security headers shipped as [`public/_headers`](public/_headers), which Cloudflare Pages serves verbatim.
 
@@ -96,6 +97,22 @@ secret behind that prefix.
 > working, which makes the cause hard to see. After moving the backend, check the deployed response
 > headers.
 
+## Languages
+
+English is the default and is served unprefixed; Spanish lives under `/es/`.
+
+| | English | Spanish |
+|---|---|---|
+| Home | `/` | `/es/` |
+| How it works | `/how-it-works/` | `/es/como-funciona/` |
+| Privacy | `/privacy/` | `/es/privacidad/` |
+
+Real routes rather than a toggle, because a toggle cannot give a screen reader a correct `lang`,
+cannot be linked to, is invisible to a search index, and shows the wrong language until it
+hydrates. `src/i18n/config.ts` holds the route table that the language switcher and the `hreflang`
+tags both read, so neither can point at a page that does not exist; `src/i18n/ui.ts` holds every
+string, with Spanish typed against the English key set so a missing translation is a build error.
+
 ## Project structure
 
 ```text
@@ -105,13 +122,15 @@ src/
                 RecentHistory hang off it. Header and Footer are static Astro partials.
                 Styles sit next to each component as a *.module.css file.
   layouts/      BaseLayout.astro
-  pages/        index, como-funciona, privacidad, 404
+  pages/        index, how-it-works, privacy, 404 — and es/ for the Spanish routes
+  i18n/         config.ts (languages, route table), ui.ts (every string, both languages)
   services/     api.ts, the SSE client
   lib/          segments.ts (formatting, SRT/VTT/Markdown, search folding), history.ts,
                 quoteCard.ts, share.ts. Each unit-tested on its own.
   types/        api.ts, mirroring the backend DTOs exactly
   styles/       global.css, design tokens and reset
-public/         _headers (CSP and cache rules), og.png (the social card), robots.txt, sitemap.xml
+public/         _headers (CSP and cache rules), _redirects, og.png (the social card),
+                robots.txt, sitemap.xml
 tests/          Vitest + Testing Library, mirroring src/
 ```
 

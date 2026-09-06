@@ -1,4 +1,6 @@
 import type { TranscriptionResponseDto } from "../types/api";
+import { useTranslations, type Translate } from "../i18n/ui";
+import { defaultLang } from "../i18n/config";
 
 const STORAGE_KEY = "yt-transcriber-history";
 const MAX_ENTRIES = 5;
@@ -96,19 +98,18 @@ export function clearHistory(): void {
   }
 }
 
-export function formatRelativeTime(fromMs: number): string {
+export function formatRelativeTime(fromMs: number, t: Translate = useTranslations(defaultLang)): string {
   const diffSeconds = Math.max(0, Math.round((Date.now() - fromMs) / 1000));
   if (diffSeconds < 60) {
-    return "hace un momento";
+    return t("history.when.now");
   }
   const diffMinutes = Math.round(diffSeconds / 60);
   if (diffMinutes < 60) {
-    return `hace ${diffMinutes} min`;
+    return t("history.when.minutes", { n: diffMinutes });
   }
   const diffHours = Math.round(diffMinutes / 60);
   if (diffHours < 24) {
-    return `hace ${diffHours} h`;
+    return t("history.when.hours", { n: diffHours });
   }
-  const diffDays = Math.round(diffHours / 24);
-  return `hace ${diffDays} d`;
+  return t("history.when.days", { n: Math.round(diffHours / 24) });
 }

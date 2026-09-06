@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import type { ProcessingStage } from "../types/api";
+import { useTranslations } from "../i18n/ui";
+import type { Lang } from "../i18n/config";
 import styles from "./ProcessingState.module.css";
 
-const STEPS: { stage: ProcessingStage; label: string }[] = [
-  { stage: "VALIDATING_URL", label: "Validando URL" },
-  { stage: "RESOLVING_VIDEO", label: "Obteniendo información" },
-  { stage: "TRANSCRIBING", label: "Transcribiendo audio" },
-  { stage: "TRANSLATING", label: "Traduciendo contenido" },
-  { stage: "PREPARING_RESULT", label: "Preparando resultado" },
+// The order the backend reports them in. The label for each is looked up at render time, so the
+// list stays a description of the pipeline rather than a second place strings have to be kept.
+const STEPS: ProcessingStage[] = [
+  "VALIDATING_URL",
+  "RESOLVING_VIDEO",
+  "TRANSCRIBING",
+  "TRANSLATING",
+  "PREPARING_RESULT",
 ];
 
 // Reached only when the video has no captions at all and the audio has to go through Whisper,
@@ -16,6 +20,7 @@ const STEPS: { stage: ProcessingStage; label: string }[] = [
 const SLOW_STAGE: ProcessingStage = "TRANSCRIBING";
 
 interface ProcessingStateProps {
+  lang: Lang;
   stage: ProcessingStage | null;
   onCancel?: () => void;
 }
@@ -25,8 +30,9 @@ function formatElapsed(seconds: number): string {
   return `${minutes}:${(seconds % 60).toString().padStart(2, "0")}`;
 }
 
-export default function ProcessingState({ stage, onCancel }: ProcessingStateProps) {
-  const activeIndex = stage ? STEPS.findIndex((step) => step.stage === stage) : -1;
+export default function ProcessingState({ lang, stage, onCancel }: ProcessingStateProps) {
+  const t = useTranslations(lang);
+  const activeIndex = stage ? STEPS.indexOf(stage) : -1;
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   useEffect(() => {
@@ -40,12 +46,12 @@ export default function ProcessingState({ stage, onCancel }: ProcessingStateProp
       <ul className={styles.steps}>
         {STEPS.map((step, index) => (
           <li
-            key={step.stage}
+            key={step}
             className={styles.step}
             data-state={index < activeIndex ? "done" : index === activeIndex ? "active" : "pending"}
           >
             <span className={styles.dot} />
-            <span className={styles.label}>{step.label}</span>
+            <span className={styles.label}>{t(`stage.${step}`)}</span>
           </li>
         ))}
       </ul>
@@ -54,15 +60,13 @@ export default function ProcessingState({ stage, onCancel }: ProcessingStateProp
         <span className={styles.elapsed}>{formatElapsed(elapsedSeconds)}</span>
         {onCancel && (
           <button type="button" className={styles.cancel} onClick={onCancel}>
-            Cancelar
+            {t("processing.cancel")}
           </button>
         )}
       </div>
 
       <p className={styles.note}>
-        {stage === SLOW_STAGE
-          ? "Este vídeo no trae subtítulos, así que estamos escuchando el audio entero. Puede tardar varios minutos."
-          : "Puedes dejar la pestaña abierta. No guardamos el resultado de forma permanente."}
+        {stage === SLOW_STAGE ? t("processing.noteSlow") : t("processing.note")}
       </p>
     </div>
   );

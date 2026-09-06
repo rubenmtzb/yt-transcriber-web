@@ -1,16 +1,24 @@
 ---
+import LanguageSwitcher from "./LanguageSwitcher.astro";
+import { getLangFromPath, routes } from "../i18n/config";
+import { useTranslations } from "../i18n/ui";
+
+const lang = getLangFromPath(Astro.url.pathname);
+const t = useTranslations(lang);
+
 const links = [
-  { href: "/como-funciona", label: "Cómo funciona" },
-  { href: "/privacidad", label: "Privacidad" },
+  { href: routes.howItWorks[lang], label: t("nav.howItWorks") },
+  { href: routes.privacy[lang], label: t("nav.privacy") },
 ];
 ---
 
 <header class="header">
-  <a href="/" class="logo" aria-label="YT Transcriber — inicio">
+  <a href={routes.home[lang]} class="logo" aria-label={t("nav.home")}>
     <img src="/logo.png" alt="" width="160" height="133" />
   </a>
   <nav class="nav">
     {links.map((link) => <a href={link.href}>{link.label}</a>)}
+    <LanguageSwitcher />
   </nav>
 </header>
 
@@ -77,22 +85,27 @@ const links = [
 
   .nav {
     display: flex;
+    align-items: center;
     gap: var(--space-4);
   }
 
-  .nav a {
+  .nav > a {
     text-decoration: none;
     color: var(--color-text-muted);
     font-size: 0.9rem;
   }
 
-  .nav a:hover {
+  .nav > a:hover {
     color: var(--color-text);
   }
 
   @media (max-width: 640px) {
     .header {
       padding: var(--space-3);
+    }
+
+    .nav {
+      gap: var(--space-3);
     }
   }
 </style>

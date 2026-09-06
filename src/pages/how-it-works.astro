@@ -1,10 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
-import TranscriptionApp from "../components/TranscriptionApp";
+import HowItWorks from "../components/pages/HowItWorks.astro";
 ---
 
-<BaseLayout>
+<BaseLayout titleKey="nav.howItWorks">
   <Header />
-  <TranscriptionApp client:load lang="en" />
+  <HowItWorks />
 </BaseLayout>

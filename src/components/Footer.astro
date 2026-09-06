@@ -1,15 +1,18 @@
 ---
+import { getLangFromPath, routes } from "../i18n/config";
+import { useTranslations } from "../i18n/ui";
+
+const lang = getLangFromPath(Astro.url.pathname);
+const t = useTranslations(lang);
+
 const links = [
-  { href: "/como-funciona", label: "Cómo funciona" },
-  { href: "/privacidad", label: "Privacidad" },
+  { href: routes.howItWorks[lang], label: t("nav.howItWorks") },
+  { href: routes.privacy[lang], label: t("nav.privacy") },
 ];
 ---
 
 <footer class="footer">
-  <p class="notice">
-    Proyecto personal, sin financiación detrás — de ahí los límites de uso. Pensado para que veas cómo está
-    construido, no como servicio de producción a gran escala.
-  </p>
+  <p class="notice">{t("footer.notice")}</p>
   <nav class="nav">
     {links.map((link) => <a href={link.href}>{link.label}</a>)}
   </nav>

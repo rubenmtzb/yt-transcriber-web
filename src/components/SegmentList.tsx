@@ -4,12 +4,15 @@ import { foldForSearch } from "../lib/segments";
 import SegmentRow, { type SegmentListMode } from "./SegmentRow";
 // Shared with SegmentRow: the active-line and reading-mode rules select across both,
 // which a per-component stylesheet could not express once the class names are hashed.
+import { useTranslations } from "../i18n/ui";
+import type { Lang } from "../i18n/config";
 import styles from "./transcript.module.css";
 
 export type { SegmentListMode };
 
 /** Everything the three viewers pass straight through, minus what each of them fixes itself. */
 export interface SegmentViewerProps {
+  lang: Lang;
   segments: SegmentDto[];
   onSegmentClick?: (segment: SegmentDto) => void;
   activeSequence?: number | null;
@@ -38,6 +41,7 @@ function segmentText(segment: SegmentDto, mode: SegmentListMode): string {
 }
 
 export default function SegmentList({
+  lang,
   segments,
   mode,
   searchPlaceholder,
@@ -52,6 +56,7 @@ export default function SegmentList({
   isPlaying = false,
   getCurrentMs,
 }: SegmentListProps) {
+  const t = useTranslations(lang);
   const [query, setQuery] = useState("");
   const [following, setFollowing] = useState(true);
   const rowRefs = useRef(new Map<number, HTMLLIElement>());
@@ -152,7 +157,7 @@ export default function SegmentList({
       />
       {!following && activeSequence !== null && (
         <button type="button" className={styles.resume} onClick={resumeFollowing}>
-          Volver a la línea actual
+          {t("search.backToLine")}
         </button>
       )}
 
@@ -162,6 +167,7 @@ export default function SegmentList({
           return (
             <SegmentRow
               key={segment.sequence}
+              lang={lang}
               segment={segment}
               mode={mode}
               isActive={isActive}
@@ -181,7 +187,7 @@ export default function SegmentList({
             />
           );
         })}
-        {filtered.length === 0 && <li className={styles.empty}>Sin resultados para "{query}".</li>}
+        {filtered.length === 0 && <li className={styles.empty}>{t("search.empty", { query })}</li>}
       </ul>
     </div>
   );
