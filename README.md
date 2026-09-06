@@ -15,7 +15,8 @@
 ## What it does
 
 Paste a YouTube URL, pick a language, and read the video as text while it plays. No account, no
-signup, nothing stored on a server.
+signup or transcript database. Results are kept in browser history; processing uses server memory
+and temporary files. Translation sends text to DeepL, and infrastructure may retain technical logs.
 
 <img src="docs/demo.gif" alt="Pasting a YouTube URL and getting a timed, translated transcript back" width="100%">
 
