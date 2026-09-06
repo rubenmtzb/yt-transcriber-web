@@ -320,3 +320,26 @@ export function downloadBlob(blob: Blob, filename: string): void {
 export function downloadTextFile(content: string, filename: string): void {
   downloadBlob(new Blob([content], { type: "text/plain;charset=utf-8" }), filename);
 }
+
+/**
+ * The line playing at {@code currentMs}: the last one to have started.
+ *
+ * Binary search rather than a scan from the top. This runs on every position tick, five times a
+ * second, over a list that reaches a few hundred lines on a long video.
+ *
+ * Segments arrive in start-time order. A gap between lines keeps the previous one active, and so
+ * does running past the end -- there is always a line being read until the video stops.
+ */
+export function findActiveSegment(segments: readonly SegmentDto[], currentMs: number): SegmentDto | null {
+  let low = 0;
+  let high = segments.length;
+  while (low < high) {
+    const middle = low + Math.floor((high - low) / 2);
+    if (segments[middle].startMs > currentMs) {
+      high = middle;
+    } else {
+      low = middle + 1;
+    }
+  }
+  return low === 0 ? null : segments[low - 1];
+}
