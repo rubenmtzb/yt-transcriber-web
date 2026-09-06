@@ -41,6 +41,7 @@ actually said.
 - Keyboard shortcuts: space to play, arrows to seek and move between lines, `M` to mute, `L` to loop.
 - Recent history in `localStorage`, so reopening a result costs nothing against the rate limit.
 - Responsive, with a reduced-motion path throughout.
+- A Content-Security-Policy and the rest of the security headers shipped as [`public/_headers`](public/_headers), which Cloudflare Pages serves verbatim.
 
 ## How it fits with the backend
 
@@ -110,6 +111,7 @@ src/
                 quoteCard.ts, share.ts. Each unit-tested on its own.
   types/        api.ts, mirroring the backend DTOs exactly
   styles/       global.css, design tokens and reset
+public/         _headers (CSP and cache rules), og.png (the social card), robots.txt, sitemap.xml
 tests/          Vitest + Testing Library, mirroring src/
 ```
 

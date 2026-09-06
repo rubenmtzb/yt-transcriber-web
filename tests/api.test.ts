@@ -146,6 +146,29 @@ describe("createTranscriptionStream", () => {
     expect(error.retryable).toBe(true);
   });
 
+  it.each([
+    ["result", "onResult"],
+    ["error", "onError"],
+  ])("reports a malformed %s payload instead of throwing inside the listener", (eventName) => {
+    // An exception thrown in an EventSource listener goes to the console and nowhere else: the
+    // callbacks never fire, so the app sits on the progress screen for good with no error and no
+    // way out. Whatever arrives has to leave through onError.
+    const onError = vi.fn();
+    const onResult = vi.fn();
+    createTranscriptionStream({ youtubeUrl: "https://youtu.be/x", targetLanguage: "es" }, {
+      onStage: vi.fn(),
+      onResult,
+      onError,
+    });
+
+    expect(() => latestSource().emit(eventName, "{ not json")).not.toThrow();
+
+    expect(onResult).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledOnce();
+    const error: ApiError = onError.mock.calls[0][0];
+    expect(error.retryable).toBe(true);
+  });
+
   it("returns a function that closes the underlying connection", () => {
     const close = createTranscriptionStream({ youtubeUrl: "https://youtu.be/x", targetLanguage: "es" }, {
       onStage: vi.fn(),
