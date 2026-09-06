@@ -67,9 +67,6 @@ const en = {
   "error.PROVIDER_UNAVAILABLE.title": "Service unavailable",
   "error.PROVIDER_UNAVAILABLE.body": "One of the external providers is not responding right now.",
   "error.PROVIDER_UNAVAILABLE.action": "Retry",
-  // Not in ErrorCode on this branch yet -- the backend's processing budget is being built
-  // separately. Translated here so the strings are waiting when it lands, rather than being the
-  // thing that gets noticed in English on a Spanish page.
   "error.PROCESSING_TIMEOUT.title": "This took too long",
   "error.PROCESSING_TIMEOUT.body":
     "Processing hit its time limit. Try a shorter video, or come back in a little while.",
