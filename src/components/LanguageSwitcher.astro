@@ -1,0 +1,78 @@
+---
+import { getLangFromPath, langCodes, languages, translatePath } from "../i18n/config";
+import { useTranslations } from "../i18n/ui";
+
+// Plain links, not a control: switching language is navigation, so it should work with no
+// JavaScript, be openable in a new tab, and land on the same page rather than the home page.
+// translatePath is what makes that last part true across differing slugs.
+const current = getLangFromPath(Astro.url.pathname);
+const t = useTranslations(current);
+---
+
+<nav class="switcher" aria-label={t("nav.language")}>
+  {
+    langCodes.map((code) => (
+      <a
+        href={translatePath(Astro.url.pathname, code)}
+        hreflang={languages[code].htmlLang}
+        lang={languages[code].htmlLang}
+        class="option"
+        data-current={code === current}
+        aria-current={code === current ? "true" : undefined}
+      >
+        <span class="short">{languages[code].short}</span>
+        <span class="full">{languages[code].name}</span>
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .switcher {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  }
+
+  .option {
+    display: block;
+    padding: 5px 12px;
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+
+  .option:hover,
+  .option:focus-visible {
+    color: var(--color-text);
+  }
+
+  .option[data-current="true"] {
+    color: var(--color-text);
+    background: var(--color-accent-2);
+  }
+
+  /* The full name is what a reader actually recognises, but it does not fit next to the nav on a
+     phone -- the two-letter code carries the same meaning in a third of the width. */
+  .full {
+    display: none;
+  }
+
+  @media (min-width: 560px) {
+    .short {
+      display: none;
+    }
+
+    .full {
+      display: block;
+    }
+  }
+</style>

@@ -1,6 +1,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { formatTimestamp } from "../lib/segments";
 import styles from "./VideoPlayer.module.css";
+import { useTranslations } from "../i18n/ui";
+import type { Lang } from "../i18n/config";
 
 export interface VideoPlayerHandle {
   seekTo: (startMs: number) => void;
@@ -17,6 +19,7 @@ interface LoopSegment {
 }
 
 interface VideoPlayerProps {
+  lang: Lang;
   videoId: string;
   onTimeUpdate?: (currentMs: number) => void;
   onPlayingChange?: (isPlaying: boolean) => void;
@@ -82,9 +85,10 @@ function VolumeIcon({ muted }: { muted: boolean }) {
 }
 
 const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function VideoPlayer(
-  { videoId, onTimeUpdate, onPlayingChange, loopSegment, initialSeekMs },
+  { lang, videoId, onTimeUpdate, onPlayingChange, loopSegment, initialSeekMs },
   ref
 ) {
+  const t = useTranslations(lang);
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YT.Player | null>(null);
   const onTimeUpdateRef = useRef(onTimeUpdate);
@@ -310,7 +314,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
           className={styles.iconButton}
           onClick={togglePlay}
           disabled={!isReady}
-          aria-label={isPlaying ? "Pausar" : "Reproducir"}
+          aria-label={isPlaying ? t("result.pause") : t("result.play")}
         >
           {isPlaying ? <PauseIcon /> : <PlayIcon />}
         </button>
@@ -325,7 +329,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
           onChange={commitSeek}
           onInput={handleSeekInput}
           disabled={!isReady}
-          aria-label="Progreso del vídeo"
+          aria-label={t("player.progress")}
         />
 
         <span className={styles.time}>
@@ -337,8 +341,8 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
           className={styles.speedButton}
           onClick={cyclePlaybackRate}
           disabled={!isReady}
-          aria-label="Velocidad de reproducción"
-          title="Velocidad de reproducción"
+          aria-label={t("player.speed")}
+          title={t("player.speed")}
         >
           {playbackRate}x
         </button>
@@ -348,7 +352,7 @@ const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(function Vid
           className={styles.iconButton}
           onClick={toggleMute}
           disabled={!isReady}
-          aria-label={isMuted ? "Activar sonido" : "Silenciar"}
+          aria-label={isMuted ? t("player.unmute") : t("player.mute")}
         >
           <VolumeIcon muted={isMuted} />
         </button>

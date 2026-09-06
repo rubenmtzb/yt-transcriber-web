@@ -1,10 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
-import TranscriptionApp from "../components/TranscriptionApp";
+import Privacy from "../components/pages/Privacy.astro";
 ---
 
-<BaseLayout>
+<BaseLayout titleKey="privacy.title">
   <Header />
-  <TranscriptionApp client:load lang="en" />
+  <Privacy />
 </BaseLayout>

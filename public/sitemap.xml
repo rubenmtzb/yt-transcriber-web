@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://yt.rubenitx.me/</loc><priority>1.0</priority></url>
-  <url><loc>https://yt.rubenitx.me/como-funciona/</loc><priority>0.5</priority></url>
-  <url><loc>https://yt.rubenitx.me/privacidad/</loc><priority>0.3</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://yt.rubenitx.me/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://yt.rubenitx.me/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://yt.rubenitx.me/es/"/>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://yt.rubenitx.me/es/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://yt.rubenitx.me/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://yt.rubenitx.me/es/"/>
+    <priority>1.0</priority>
+  </url>
+  <url><loc>https://yt.rubenitx.me/how-it-works/</loc><priority>0.5</priority></url>
+  <url><loc>https://yt.rubenitx.me/es/como-funciona/</loc><priority>0.5</priority></url>
+  <url><loc>https://yt.rubenitx.me/privacy/</loc><priority>0.3</priority></url>
+  <url><loc>https://yt.rubenitx.me/es/privacidad/</loc><priority>0.3</priority></url>
 </urlset>

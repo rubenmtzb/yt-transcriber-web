@@ -1,8 +1,11 @@
 import { useState, type SubmitEvent } from "react";
 import LanguageSelect from "./LanguageSelect";
+import { useTranslations } from "../i18n/ui";
+import type { Lang } from "../i18n/config";
 import styles from "./UrlForm.module.css";
 
 interface UrlFormProps {
+  lang: Lang;
   onSubmit: (youtubeUrl: string, targetLanguage: string) => void;
   disabled?: boolean;
   initialUrl?: string;
@@ -14,7 +17,8 @@ interface UrlFormProps {
 // a URL actually resolves to a usable video.
 const YOUTUBE_URL_PATTERN = /^https?:\/\/(www\.|m\.|music\.)?(youtube\.com\/|youtu\.be\/).+$/;
 
-export default function UrlForm({ onSubmit, disabled = false, initialUrl = "", initialTargetLanguage = "es" }: UrlFormProps) {
+export default function UrlForm({ lang, onSubmit, disabled = false, initialUrl = "", initialTargetLanguage = "es" }: UrlFormProps) {
+  const t = useTranslations(lang);
   const [youtubeUrl, setYoutubeUrl] = useState(initialUrl);
   const [targetLanguage, setTargetLanguage] = useState(initialTargetLanguage);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -26,7 +30,7 @@ export default function UrlForm({ onSubmit, disabled = false, initialUrl = "", i
     }
 
     if (!YOUTUBE_URL_PATTERN.test(youtubeUrl.trim())) {
-      setValidationError("Pega una URL válida de un vídeo de YouTube.");
+      setValidationError(t("form.invalidUrl"));
       return;
     }
 
@@ -41,22 +45,23 @@ export default function UrlForm({ onSubmit, disabled = false, initialUrl = "", i
           type="url"
           name="youtubeUrl"
           className={styles.input}
-          placeholder="Pega aquí la URL de YouTube"
+          placeholder={t("form.placeholder")}
           value={youtubeUrl}
           onChange={(event) => setYoutubeUrl(event.target.value)}
           disabled={disabled}
           required
         />
         <button type="submit" className={styles.submit} disabled={disabled}>
-          {disabled ? "Procesando…" : "Transcribir"}
+          {disabled ? t("form.submitting") : t("form.submit")}
         </button>
       </div>
 
       <div className={styles.options}>
         <label className={styles.optionsLabel} id="targetLanguageLabel" htmlFor="targetLanguage">
-          Traducir a
+          {t("form.translateTo")}
         </label>
         <LanguageSelect
+          lang={lang}
           id="targetLanguage"
           labelId="targetLanguageLabel"
           value={targetLanguage}

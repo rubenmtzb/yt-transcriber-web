@@ -1,5 +1,7 @@
 import SegmentList, { type SegmentViewerProps } from "./SegmentList";
+import { useTranslations } from "../i18n/ui";
 
 export default function TranslationViewer(props: SegmentViewerProps) {
-  return <SegmentList {...props} mode="translated" searchPlaceholder="Buscar en la traducción..." />;
+  const t = useTranslations(props.lang);
+  return <SegmentList {...props} mode="translated" searchPlaceholder={t("search.translation")} />;
 }

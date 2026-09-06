@@ -2,20 +2,24 @@
 // Without this page Astro emits no 404.html, and Cloudflare Pages answers an unknown path with
 // the homepage under a 200. That reads as "the site worked" to someone who mistyped a URL and,
 // worse, to a crawler: every wrong path becomes another copy of the homepage in the index.
+//
+// Served for both languages, so it uses the default one -- an unknown path carries no language to
+// read, and guessing from Accept-Language is not something a static build can do.
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
+import { defaultLang } from "../i18n/config";
+import { useTranslations } from "../i18n/ui";
+
+const t = useTranslations(defaultLang);
 ---
 
-<BaseLayout
-  title="Página no encontrada — YT Transcriber"
-  description="La página que buscas no existe."
->
+<BaseLayout titleKey="notFound.title" descriptionKey="notFound.description">
   <Header />
   <main class="content">
     <p class="code">404</p>
-    <h1>Esta página no existe</h1>
-    <p class="lead">Puede que el enlace esté mal escrito o que la página se haya movido.</p>
-    <a class="action" href="/">Volver al inicio</a>
+    <h1>{t("notFound.title")}</h1>
+    <p class="lead">{t("notFound.lead")}</p>
+    <a class="action" href="/">{t("notFound.action")}</a>
   </main>
 </BaseLayout>
 

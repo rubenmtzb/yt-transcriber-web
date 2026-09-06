@@ -4,11 +4,14 @@ import { formatTimestamp, splitOnMatches } from "../lib/segments";
 import KaraokeText from "./KaraokeText";
 // Shared with SegmentRow: the active-line and reading-mode rules select across both,
 // which a per-component stylesheet could not express once the class names are hashed.
+import { useTranslations } from "../i18n/ui";
+import type { Lang } from "../i18n/config";
 import styles from "./transcript.module.css";
 
 export type SegmentListMode = "source" | "translated" | "dual";
 
 interface SegmentRowProps {
+  lang: Lang;
   segment: SegmentDto;
   mode: SegmentListMode;
   isActive: boolean;
@@ -67,6 +70,7 @@ function ImageIcon() {
  * the read-along sweep. Now only the line being spoken re-renders.
  */
 function SegmentRow({
+  lang,
   segment,
   mode,
   isActive,
@@ -82,6 +86,8 @@ function SegmentRow({
   registerRow,
   clickable,
 }: SegmentRowProps) {
+  const t = useTranslations(lang);
+
   function renderText(text: string, className: string, alignTo?: string) {
     // While searching, showing *where* the match is beats sweeping the line: the two would fight
     // over the same colour anyway.
@@ -133,7 +139,7 @@ function SegmentRow({
           type="button"
           className={styles.timestamp}
           disabled={!clickable}
-          aria-label={`Saltar a ${formatTimestamp(segment.startMs)}`}
+          aria-label={t("row.jumpTo", { time: formatTimestamp(segment.startMs) })}
         >
           {formatTimestamp(segment.startMs)}
         </button>
@@ -157,8 +163,8 @@ function SegmentRow({
           className={styles.actionButton}
           data-active={isLooping}
           onClick={() => onToggleLoop?.(segment)}
-          aria-label="Repetir esta línea en bucle"
-          title="Repetir en bucle"
+          aria-label={t("row.loop")}
+          title={t("row.loop")}
         >
           <RepeatIcon />
         </button>
@@ -166,8 +172,8 @@ function SegmentRow({
           type="button"
           className={styles.actionButton}
           onClick={() => onCopyLink?.(segment)}
-          aria-label="Copiar enlace a este momento"
-          title="Copiar enlace a este momento"
+          aria-label={t("row.copyLink")}
+          title={t("row.copyLink")}
         >
           <LinkIcon />
         </button>
@@ -175,8 +181,8 @@ function SegmentRow({
           type="button"
           className={styles.actionButton}
           onClick={() => onShareQuote?.(segment)}
-          aria-label="Descargar esta línea como imagen"
-          title="Descargar como imagen"
+          aria-label={t("row.saveImage")}
+          title={t("row.saveImage")}
         >
           <ImageIcon />
         </button>

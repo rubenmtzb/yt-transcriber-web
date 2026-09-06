@@ -2,9 +2,12 @@ import type { HistoryEntry } from "../lib/history";
 import { formatRelativeTime } from "../lib/history";
 import { formatTimestamp } from "../lib/segments";
 import { SUPPORTED_TARGET_LANGUAGES } from "./LanguageSelect";
+import { useTranslations } from "../i18n/ui";
+import type { Lang } from "../i18n/config";
 import styles from "./RecentHistory.module.css";
 
 interface RecentHistoryProps {
+  lang: Lang;
   entries: HistoryEntry[];
   onSelect: (entry: HistoryEntry) => void;
   onClear: () => void;
@@ -14,7 +17,9 @@ function languageLabel(code: string): string {
   return SUPPORTED_TARGET_LANGUAGES.find((lang) => lang.code === code)?.label ?? code.toUpperCase();
 }
 
-export default function RecentHistory({ entries, onSelect, onClear }: RecentHistoryProps) {
+export default function RecentHistory({ lang, entries, onSelect, onClear }: RecentHistoryProps) {
+  const t = useTranslations(lang);
+
   if (entries.length === 0) {
     return null;
   }
@@ -22,9 +27,9 @@ export default function RecentHistory({ entries, onSelect, onClear }: RecentHist
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <p className={styles.label}>Recientes</p>
+        <p className={styles.label}>{t("history.recent")}</p>
         <button type="button" className={styles.clear} onClick={onClear}>
-          Borrar historial
+          {t("history.clear")}
         </button>
       </div>
       <ul className={styles.list}>
@@ -40,9 +45,9 @@ export default function RecentHistory({ entries, onSelect, onClear }: RecentHist
               <span className={styles.cardBody}>
                 <span className={styles.cardTitle}>{entry.result.video.title}</span>
                 <span className={styles.cardMeta}>
-                  {languageLabel(entry.result.targetLanguage)} · {formatRelativeTime(entry.savedAt)}
+                  {languageLabel(entry.result.targetLanguage)} · {formatRelativeTime(entry.savedAt, t)}
                   {entry.positionMs !== undefined && (
-                    <span className={styles.resume}> · continúa en {formatTimestamp(entry.positionMs)}</span>
+                    <span className={styles.resume}> · {t("history.resume", { time: formatTimestamp(entry.positionMs) })}</span>
                   )}
                 </span>
               </span>

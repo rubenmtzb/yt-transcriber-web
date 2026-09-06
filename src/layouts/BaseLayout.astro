@@ -1,25 +1,36 @@
 ---
 import "../styles/global.css";
 import Footer from "../components/Footer.astro";
+import { getLangFromPath, langCodes, languages, translatePath, defaultLang } from "../i18n/config";
+import { useTranslations, type UiKey } from "../i18n/ui";
 
 interface Props {
-  title?: string;
-  description?: string;
+  /** Dictionary key for the page title, or a ready-made string. Defaults to the site name. */
+  titleKey?: UiKey;
+  descriptionKey?: UiKey;
 }
 
-const {
-  title = "YT Transcriber",
-  description = "Transcribe y traduce vídeos de YouTube. Sin registro, sin almacenamiento.",
-} = Astro.props;
+// Read from the route rather than passed down: the URL is what decides the language, and taking it
+// from anywhere else is how a page ends up rendered in one language and labelled as another.
+const lang = getLangFromPath(Astro.url.pathname);
+const t = useTranslations(lang);
+
+const { titleKey, descriptionKey } = Astro.props;
+const pageTitle = titleKey ? `${t(titleKey)} — ${t("site.title")}` : t("site.title");
+const description = t(descriptionKey ?? "site.description");
 
 // Absolute, because that is the only form a crawler accepts. Astro.site comes from the config;
 // Astro.url is the page being rendered, so every page advertises itself rather than the homepage.
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const socialImage = new URL("/og.png", Astro.site);
+const alternates = langCodes.map((code) => ({
+  code,
+  href: new URL(translatePath(Astro.url.pathname, code), Astro.site),
+}));
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang={languages[lang].htmlLang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -27,24 +38,35 @@ const socialImage = new URL("/og.png", Astro.site);
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="apple-touch-icon" href="/icon-512.png" />
     <meta name="description" content={description} />
-    <title>{title}</title>
+    <title>{pageTitle}</title>
     <link rel="canonical" href={canonical} />
+
+    {/* Tells a search engine these are the same page in two languages rather than duplicates of
+        each other, and which one to serve a reader whose language matches neither. */}
+    {alternates.map((alternate) => (
+      <link rel="alternate" hreflang={languages[alternate.code].htmlLang} href={alternate.href} />
+    ))}
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={new URL(translatePath(Astro.url.pathname, defaultLang), Astro.site)}
+    />
 
     {/* Without these a shared link renders as a bare URL: no title, no image, no summary. The
         card is what most people see of this before they ever open it. */}
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="YT Transcriber" />
-    <meta property="og:locale" content="es_ES" />
+    <meta property="og:site_name" content={t("site.title")} />
+    <meta property="og:locale" content={languages[lang].ogLocale} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:title" content={title} />
+    <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={socialImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="YT Transcriber: transcribe y traduce vídeos de YouTube" />
+    <meta property="og:image:alt" content={t("site.description")} />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={title} />
+    <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={socialImage} />
 

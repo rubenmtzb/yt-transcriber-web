@@ -1,0 +1,151 @@
+---
+import { getLangFromPath } from "../../i18n/config";
+import { useTranslations, type UiKey } from "../../i18n/ui";
+
+const lang = getLangFromPath(Astro.url.pathname);
+const t = useTranslations(lang);
+
+const steps = [1, 2, 3, 4, 5] as const;
+const limits = [1, 2, 3, 4] as const;
+---
+
+<main class="content">
+  <h1>{t("howItWorks.title.lead")} <span class="accent">{t("howItWorks.title.accent")}</span></h1>
+
+  <ol class="steps">
+    {
+      steps.map((step, index) => (
+        <li class="step" style={`--delay: ${0.1 + index * 0.09}s`}>
+          <span class="number">{index + 1}</span>
+          <span class="stepBody">
+            <strong>{t(`howItWorks.step${step}.title` as UiKey)}</strong>
+            <span>{t(`howItWorks.step${step}.body` as UiKey)}</span>
+          </span>
+        </li>
+      ))
+    }
+  </ol>
+
+  <h2>{t("howItWorks.storage.title")}</h2>
+  {/* The one string carrying markup of its own: the emphasis on "this browser" is the whole point
+      of the sentence, and splitting it into fragments would put the stress in a different place in
+      each language. */}
+  <p set:html={t("howItWorks.storage.body")} />
+
+  <h2>{t("howItWorks.limits.title")}</h2>
+  <ul class="limits">
+    {limits.map((limit, index) => (
+      <li style={`--delay: ${0.1 + index * 0.09}s`}>{t(`howItWorks.limits.${limit}` as UiKey)}</li>
+    ))}
+  </ul>
+</main>
+
+<style>
+  .content {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-6) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  h1 {
+    font-size: 2rem;
+    animation: rise-in 0.6s ease-out both;
+  }
+
+  .accent {
+    background-image: linear-gradient(
+      90deg,
+      var(--color-accent-1) 0 var(--sweep),
+      var(--color-text) var(--sweep) 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: sweep-in 1s ease-out 0.3s both;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    margin-top: var(--space-3);
+    animation: rise-in 0.5s ease-out both;
+  }
+
+  p,
+  .limits {
+    color: var(--color-text-muted);
+    line-height: 1.7;
+  }
+
+  p {
+    animation: rise-in 0.5s ease-out both;
+  }
+
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .step {
+    position: relative;
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    animation: rise-in 0.5s ease-out var(--delay, 0s) both;
+  }
+
+  .step:hover {
+    transform: translateX(4px);
+    border-color: var(--color-accent-1);
+  }
+
+  .number {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--color-accent-2);
+    color: var(--color-text);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .stepBody {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .stepBody strong {
+    color: var(--color-text);
+  }
+
+  .stepBody span {
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  .limits {
+    margin: 0;
+    padding-left: var(--space-4);
+  }
+
+  .limits li {
+    animation: rise-in 0.5s ease-out var(--delay, 0s) both;
+  }
+</style>

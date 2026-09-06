@@ -19,9 +19,12 @@ import { buildShareUrl } from "../lib/share";
 import { renderQuoteCard, type QuoteCardMode } from "../lib/quoteCard";
 import { useNotice } from "../hooks/useNotice";
 import { useTranscriptShortcuts } from "../hooks/useTranscriptShortcuts";
+import { useTranslations, type Translate } from "../i18n/ui";
+import type { Lang } from "../i18n/config";
 import styles from "./ResultView.module.css";
 
 interface ResultViewProps {
+  lang: Lang;
   result: TranscriptionResponseDto;
   onReset: () => void;
   initialSeekMs?: number;
@@ -42,27 +45,24 @@ function languageLabel(code: string): string {
 // One row of chips rather than six stacked links: they only differ by extension, and stacking
 // them made the sidebar a wall of near-identical text.
 const DOWNLOAD_FORMATS: {
-  extension: string;
-  description: string;
+  extension: "txt" | "srt" | "vtt" | "md";
   render: (segments: SegmentDto[], field: SegmentField, video: VideoDto) => string;
 }[] = [
-  { extension: "txt", description: "Texto plano, sin marcas de tiempo", render: (s, f) => toPlainText(s, f) },
-  { extension: "srt", description: "Subtítulos SubRip", render: (s, f) => toSrt(s, f) },
-  { extension: "vtt", description: "Subtítulos WebVTT, para reproductores web", render: (s, f) => toVtt(s, f) },
-  {
-    extension: "md",
-    description: "Markdown con cada línea enlazada a su momento",
-    render: (s, f, video) => toMarkdown(s, f, video.id, video.title),
-  },
+  { extension: "txt", render: (s, f) => toPlainText(s, f) },
+  { extension: "srt", render: (s, f) => toSrt(s, f) },
+  { extension: "vtt", render: (s, f) => toVtt(s, f) },
+  { extension: "md", render: (s, f, video) => toMarkdown(s, f, video.id, video.title) },
 ];
 
-const TRANSCRIPT_SOURCE_LABELS: Record<TranscriptSource, string> = {
-  MANUAL_CAPTIONS: "subtítulos del autor",
-  AUTOMATIC_CAPTIONS: "subtítulos automáticos",
-  SPEECH_TO_TEXT: "transcrito del audio",
-};
+// Where the text came from, named for a reader. Falls back rather than crashing on a source the
+// backend gains before this list hears about it.
+function transcriptSourceLabel(source: TranscriptSource | undefined, t: Translate): string {
+  const known: TranscriptSource[] = ["MANUAL_CAPTIONS", "AUTOMATIC_CAPTIONS", "SPEECH_TO_TEXT"];
+  return source && known.includes(source) ? t(`result.source.${source}`) : t("result.source.unknown");
+}
 
-export default function ResultView({ result, onReset, initialSeekMs, onPositionChange }: ResultViewProps) {
+export default function ResultView({ lang, result, onReset, initialSeekMs, onPositionChange }: ResultViewProps) {
+  const t = useTranslations(lang);
   const [tab, setTab] = useState<Tab>("transcript");
   const [currentMs, setCurrentMs] = useState(initialSeekMs ?? 0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -85,10 +85,10 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
       } catch {
         // The Clipboard API rejects outside a secure context or when the user denies permission.
         // Downloading still works, so say so instead of failing silently.
-        notify("No se pudo copiar. Usa la descarga.");
+        notify(t("result.copyFailed"));
       }
     },
-    [notify],
+    [notify, t],
   );
 
   const jumpToSegment = useCallback((segment: SegmentDto) => {
@@ -105,9 +105,9 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
   const copyMomentLink = useCallback(
     async (segment: SegmentDto) => {
       const url = await buildShareUrl(window.location.href, result, Math.floor(segment.startMs / 1000));
-      copy(url, url.includes("#") ? "Enlace copiado (abre sin gastar cupo)" : "Enlace copiado");
+      copy(url, t(url.includes("#") ? "result.linkCopiedFree" : "result.linkCopied"));
     },
-    [result, copy],
+    [result, copy, t],
   );
 
   const shareQuote = useCallback(
@@ -116,13 +116,13 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
         activeTabRef.current === "translation" ? "translated" : activeTabRef.current === "dual" ? "dual" : "source";
       try {
         const blob = await renderQuoteCard({ segment, videoTitle: result.video.title, mode });
-        downloadBlob(blob, `cita-${result.video.id}-${segment.sequence}.png`);
-        notify("Imagen descargada");
+        downloadBlob(blob, `${t("file.quote")}-${result.video.id}-${segment.sequence}.png`);
+        notify(t("result.imageSaved"));
       } catch {
-        notify("No se pudo generar la imagen");
+        notify(t("result.imageFailed"));
       }
     },
-    [result, notify],
+    [result, notify, t],
   );
 
   // Position is reported on a much coarser beat than it is polled: writing to localStorage five
@@ -147,7 +147,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
   const activeTab: Tab = isSameLanguage ? "transcript" : tab;
   activeTabRef.current = activeTab;
   const downloadField = isSameLanguage ? "sourceText" : "translatedText";
-  const downloadName = isSameLanguage ? "transcripcion" : "traduccion";
+  const downloadName = t(isSameLanguage ? "file.transcript" : "file.translation");
   const targetLanguageLabel = languageLabel(result.targetLanguage);
   const sourceLanguageLabel = languageLabel(result.sourceLanguage);
 
@@ -179,6 +179,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
   });
 
   const sharedListProps = {
+    lang,
     segments: result.segments,
     onSegmentClick: jumpToSegment,
     activeSequence: activeSegment?.sequence ?? null,
@@ -198,6 +199,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
     <div className={styles.container} data-reading={reading}>
       <aside className={styles.sidebar}>
         <VideoPlayer
+          lang={lang}
           videoId={result.video.id}
           ref={playerRef}
           onTimeUpdate={handleTimeUpdate}
@@ -207,37 +209,37 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
         />
 
         <div>
-          <p className={styles.eyebrow}>Vídeo</p>
+          <p className={styles.eyebrow}>{t("result.videoEyebrow")}</p>
           <h2 className={styles.title}>{result.video.title}</h2>
           {/* Where the text came from isn't cosmetic: speech-to-text is our reading of the audio
               and gets names wrong in ways the uploader's own captions don't. */}
           <p className={styles.meta}>
-            {result.segments.length} líneas · {sourceLanguageLabel}
-            {result.source && ` · ${TRANSCRIPT_SOURCE_LABELS[result.source] ?? "origen desconocido"}`}
+            {t("result.lines", { count: result.segments.length })} · {sourceLanguageLabel}
+            {result.source && ` · ${transcriptSourceLabel(result.source, t)}`}
           </p>
         </div>
 
         <div className={styles.actions}>
-          <p className={styles.actionsLabel}>Copiar</p>
+          <p className={styles.actionsLabel}>{t("result.copy")}</p>
           <div className={styles.actionRow}>
-            <button type="button" className={styles.actionButton} onClick={() => copy(toPlainText(result.segments, "sourceText"), "Transcripción copiada")}>
-              Transcripción
+            <button type="button" className={styles.actionButton} onClick={() => copy(toPlainText(result.segments, "sourceText"), t("result.transcriptCopied"))}>
+              {t("result.transcript")}
             </button>
             {!isSameLanguage && (
-              <button type="button" className={styles.actionButton} onClick={() => copy(toPlainText(result.segments, "translatedText"), "Traducción copiada")}>
-                Traducción
+              <button type="button" className={styles.actionButton} onClick={() => copy(toPlainText(result.segments, "translatedText"), t("result.translationCopied"))}>
+                {t("result.translation")}
               </button>
             )}
           </div>
 
-          <p className={styles.actionsLabel}>Descargar</p>
+          <p className={styles.actionsLabel}>{t("result.download")}</p>
           <div className={styles.actionRow}>
             {DOWNLOAD_FORMATS.map((format) => (
               <button
                 key={format.extension}
                 type="button"
                 className={styles.formatButton}
-                title={format.description}
+                title={t(`result.format.${format.extension}`)}
                 onClick={() =>
                   downloadTextFile(
                     format.render(result.segments, downloadField, result.video),
@@ -252,7 +254,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
         </div>
 
         <p className={styles.shortcuts}>
-          Atajos: espacio reproducir · ← → saltar 5s · ↑ ↓ línea · M silenciar · L repetir línea
+          {t("result.shortcuts")}
         </p>
 
         <p className={styles.feedback} role="status" data-visible={notice !== null}>
@@ -260,7 +262,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
         </p>
 
         <button type="button" className={styles.reset} onClick={onReset}>
-          Nueva transcripción
+          {t("result.newRun")}
         </button>
       </aside>
 
@@ -271,7 +273,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
           onClick={() => setReading((value) => !value)}
           aria-pressed={reading}
         >
-          {reading ? "Salir del modo lectura" : "Modo lectura"}
+          {t(reading ? "result.exitReadingMode" : "result.readingMode")}
         </button>
 
         {reading && (
@@ -282,7 +284,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
               type="button"
               className={styles.readingPlay}
               onClick={() => playerRef.current?.togglePlay()}
-              aria-label={isPlaying ? "Pausar" : "Reproducir"}
+              aria-label={t(isPlaying ? "result.pause" : "result.play")}
             >
               {isPlaying ? "❚❚" : "▶"}
             </button>
@@ -292,8 +294,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
 
         {isSameLanguage ? (
           <p className={styles.sameLanguageNotice} role="status">
-            Este vídeo ya está en {targetLanguageLabel}, así que no se ha traducido nada. Elige otro idioma de
-            destino al iniciar una nueva transcripción si quieres una traducción.
+            {t("result.sameLanguage", { language: targetLanguageLabel })}
           </p>
         ) : (
           <div className={styles.tabs} role="tablist">
@@ -305,7 +306,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
               data-active={activeTab === "transcript"}
               onClick={() => setTab("transcript")}
             >
-              Transcripción
+              {t("result.tab.transcript")}
             </button>
             <button
               type="button"
@@ -315,7 +316,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
               data-active={activeTab === "translation"}
               onClick={() => setTab("translation")}
             >
-              Traducción ({result.targetLanguage.toUpperCase()})
+              {t("result.tab.translation", { code: result.targetLanguage.toUpperCase() })}
             </button>
             <button
               type="button"
@@ -325,7 +326,7 @@ export default function ResultView({ result, onReset, initialSeekMs, onPositionC
               data-active={activeTab === "dual"}
               onClick={() => setTab("dual")}
             >
-              Vista dual
+              {t("result.tab.dual")}
             </button>
           </div>
         )}

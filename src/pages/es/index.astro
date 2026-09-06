@@ -1,0 +1,10 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Header from "../../components/Header.astro";
+import TranscriptionApp from "../../components/TranscriptionApp";
+---
+
+<BaseLayout>
+  <Header />
+  <TranscriptionApp client:load lang="es" />
+</BaseLayout>
