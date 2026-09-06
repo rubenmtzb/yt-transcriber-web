@@ -7,12 +7,12 @@ describe("UrlForm", () => {
   it("shows a Spanish validation message for a non-YouTube URL, without calling onSubmit", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(<UrlForm onSubmit={onSubmit} />);
+    render(<UrlForm lang="en" onSubmit={onSubmit} />);
 
-    await user.type(screen.getByPlaceholderText(/pega aquí la url/i), "not-a-url");
-    await user.click(screen.getByRole("button", { name: /transcribir/i }));
+    await user.type(screen.getByPlaceholderText(/paste a youtube url/i), "not-a-url");
+    await user.click(screen.getByRole("button", { name: /transcribe/i }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent("Pega una URL válida de un vídeo de YouTube.");
+    expect(screen.getByRole("alert")).toHaveTextContent("Paste a link to a YouTube video.");
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -27,9 +27,9 @@ describe("UrlForm", () => {
 
     for (const url of urls) {
       onSubmit.mockClear();
-      const { unmount } = render(<UrlForm onSubmit={onSubmit} />);
-      await user.type(screen.getByPlaceholderText(/pega aquí la url/i), url);
-      await user.click(screen.getByRole("button", { name: /transcribir/i }));
+      const { unmount } = render(<UrlForm lang="en" onSubmit={onSubmit} />);
+      await user.type(screen.getByPlaceholderText(/paste a youtube url/i), url);
+      await user.click(screen.getByRole("button", { name: /transcribe/i }));
       expect(onSubmit).toHaveBeenCalledWith(url, "es");
       unmount();
     }
@@ -38,10 +38,10 @@ describe("UrlForm", () => {
   it("trims whitespace before submitting", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(<UrlForm onSubmit={onSubmit} />);
+    render(<UrlForm lang="en" onSubmit={onSubmit} />);
 
-    await user.type(screen.getByPlaceholderText(/pega aquí la url/i), "  https://youtu.be/dQw4w9WgXcQ  ");
-    await user.click(screen.getByRole("button", { name: /transcribir/i }));
+    await user.type(screen.getByPlaceholderText(/paste a youtube url/i), "  https://youtu.be/dQw4w9WgXcQ  ");
+    await user.click(screen.getByRole("button", { name: /transcribe/i }));
 
     expect(onSubmit).toHaveBeenCalledWith("https://youtu.be/dQw4w9WgXcQ", "es");
   });
@@ -49,9 +49,9 @@ describe("UrlForm", () => {
   it("does not call onSubmit when disabled, preventing a double submission", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(<UrlForm onSubmit={onSubmit} disabled />);
+    render(<UrlForm lang="en" onSubmit={onSubmit} disabled />);
 
-    const submitButton = screen.getByRole("button", { name: /procesando/i });
+    const submitButton = screen.getByRole("button", { name: /working/i });
     expect(submitButton).toBeDisabled();
     await user.click(submitButton);
 

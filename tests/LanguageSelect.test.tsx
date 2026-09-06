@@ -5,7 +5,7 @@ import LanguageSelect from "../src/components/LanguageSelect";
 
 describe("LanguageSelect", () => {
   it("shows the selected language and keeps the list closed until asked", () => {
-    render(<LanguageSelect value="en" onChange={vi.fn()} />);
+    render(<LanguageSelect lang="en" value="en" onChange={vi.fn()} />);
 
     expect(screen.getByRole("combobox")).toHaveTextContent("English");
     expect(screen.getByRole("combobox")).toHaveAttribute("aria-expanded", "false");
@@ -14,7 +14,7 @@ describe("LanguageSelect", () => {
 
   it("opens on click and reports the selected option to assistive tech", async () => {
     const user = userEvent.setup();
-    render(<LanguageSelect value="es" onChange={vi.fn()} />);
+    render(<LanguageSelect lang="en" value="es" onChange={vi.fn()} />);
 
     await user.click(screen.getByRole("combobox"));
 
@@ -26,7 +26,7 @@ describe("LanguageSelect", () => {
   it("reports the chosen language when an option is clicked", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<LanguageSelect value="es" onChange={onChange} />);
+    render(<LanguageSelect lang="en" value="es" onChange={onChange} />);
 
     await user.click(screen.getByRole("combobox"));
     await user.click(screen.getByRole("option", { name: /Français/ }));
@@ -38,7 +38,7 @@ describe("LanguageSelect", () => {
   it("can be driven entirely from the keyboard", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<LanguageSelect value="es" onChange={onChange} />);
+    render(<LanguageSelect lang="en" value="es" onChange={onChange} />);
 
     const trigger = screen.getByRole("combobox");
     trigger.focus();
@@ -57,7 +57,7 @@ describe("LanguageSelect", () => {
   it("closes on Escape without choosing anything, and hands focus back", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(<LanguageSelect value="es" onChange={onChange} />);
+    render(<LanguageSelect lang="en" value="es" onChange={onChange} />);
 
     const trigger = screen.getByRole("combobox");
     await user.click(trigger);
@@ -72,7 +72,7 @@ describe("LanguageSelect", () => {
     const user = userEvent.setup();
     render(
       <div>
-        <LanguageSelect value="es" onChange={vi.fn()} />
+        <LanguageSelect lang="en" value="es" onChange={vi.fn()} />
         <button type="button">fuera</button>
       </div>,
     );
@@ -87,7 +87,7 @@ describe("LanguageSelect", () => {
     render(
       <div>
         <span id="lbl">Traducir a</span>
-        <LanguageSelect id="lang" labelId="lbl" value="es" onChange={vi.fn()} />
+        <LanguageSelect lang="en" id="lang" labelId="lbl" value="es" onChange={vi.fn()} />
       </div>,
     );
 
@@ -96,7 +96,7 @@ describe("LanguageSelect", () => {
 
   it("cannot be opened while disabled", async () => {
     const user = userEvent.setup();
-    render(<LanguageSelect value="es" onChange={vi.fn()} disabled />);
+    render(<LanguageSelect lang="en" value="es" onChange={vi.fn()} disabled />);
 
     await user.click(screen.getByRole("combobox"));
 
