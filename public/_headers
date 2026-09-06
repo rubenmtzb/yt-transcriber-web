@@ -15,7 +15,7 @@
   # Pinning their hashes here would break the site silently on any Astro upgrade or island change,
   # so script-src keeps 'unsafe-inline'. The directive still earns its place: it pins which external
   # hosts may serve script at all, which is what an injected <script src> would need.
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://i.ytimg.com; connect-src 'self' https://yt-api.rubenitx.me; frame-src https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.youtube.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://i.ytimg.com; connect-src 'self' https://yt-api.rubenitx.me; frame-src https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
   # Belt and braces with frame-ancestors above, for anything that only understands this one.
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff

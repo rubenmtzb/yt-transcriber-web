@@ -1,5 +1,10 @@
 name: CI
 
+# Nothing here writes to the repository, and the default token is granted write scopes it would
+# hand to any workflow step -- including a compromised dependency's postinstall script.
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -15,7 +20,8 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          # Matches the engines floor in package.json.
+          node-version: '22.12'
           cache: npm
 
       - name: Install dependencies

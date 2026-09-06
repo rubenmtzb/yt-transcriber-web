@@ -101,6 +101,11 @@ function normalizeUsage(body: Partial<UsageSnapshotDto> | null): UsageSnapshotDt
   };
 }
 
+/** The envelope for a failure the backend never got to describe itself. */
+function connectionLost(message: string): ApiError {
+  return new ApiError({ code: "PROVIDER_UNAVAILABLE", message, retryable: true, requestId: "" });
+}
+
 interface StreamCallbacks {
   onStage: (stage: ProcessingStage) => void;
   onResult: (result: TranscriptionResponseDto) => void;
@@ -132,8 +137,18 @@ export function createTranscriptionStream(request: TranscriptionRequestDto, call
   });
 
   source.addEventListener("result", (event) => {
-    const result: TranscriptionResponseDto = JSON.parse((event as MessageEvent<string>).data);
     source.close();
+    // An exception thrown inside an EventSource listener has nowhere to go: the browser reports it
+    // to the console and the app keeps waiting on a stream that is already closed, leaving the
+    // reader on the progress screen with no error and no way forward. Whatever arrives here that
+    // isn't the result has to come back as one.
+    let result: TranscriptionResponseDto;
+    try {
+      result = JSON.parse((event as MessageEvent<string>).data);
+    } catch {
+      callbacks.onError(connectionLost("Received a malformed response from the server."));
+      return;
+    }
     callbacks.onResult(result);
   });
 
@@ -144,17 +159,14 @@ export function createTranscriptionStream(request: TranscriptionRequestDto, call
   source.addEventListener("error", (event) => {
     source.close();
     const data = (event as MessageEvent<string>).data;
-    if (typeof data === "string") {
+    if (typeof data !== "string") {
+      callbacks.onError(connectionLost("Lost connection to the server."));
+      return;
+    }
+    try {
       callbacks.onError(new ApiError(JSON.parse(data)));
-    } else {
-      callbacks.onError(
-        new ApiError({
-          code: "PROVIDER_UNAVAILABLE",
-          message: "Lost connection to the server.",
-          retryable: true,
-          requestId: "",
-        }),
-      );
+    } catch {
+      callbacks.onError(connectionLost("Lost connection to the server."));
     }
   });
 

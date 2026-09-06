@@ -11,6 +11,11 @@ const {
   title = "YT Transcriber",
   description = "Transcribe y traduce vídeos de YouTube. Sin registro, sin almacenamiento.",
 } = Astro.props;
+
+// Absolute, because that is the only form a crawler accepts. Astro.site comes from the config;
+// Astro.url is the page being rendered, so every page advertises itself rather than the homepage.
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const socialImage = new URL("/og.png", Astro.site);
 ---
 
 <!doctype html>
@@ -23,6 +28,25 @@ const {
     <link rel="apple-touch-icon" href="/icon-512.png" />
     <meta name="description" content={description} />
     <title>{title}</title>
+    <link rel="canonical" href={canonical} />
+
+    {/* Without these a shared link renders as a bare URL: no title, no image, no summary. The
+        card is what most people see of this before they ever open it. */}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="YT Transcriber" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="YT Transcriber: transcribe y traduce vídeos de YouTube" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
