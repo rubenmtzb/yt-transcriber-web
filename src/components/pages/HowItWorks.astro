@@ -1,5 +1,5 @@
 ---
-import { getLangFromPath } from "../../i18n/config";
+import { getLangFromPath, routes } from "../../i18n/config";
 import { useTranslations, type UiKey } from "../../i18n/ui";
 
 const lang = getLangFromPath(Astro.url.pathname);
@@ -30,7 +30,7 @@ const limits = [1, 2, 3, 4] as const;
   {/* The one string carrying markup of its own: the emphasis on "this browser" is the whole point
       of the sentence, and splitting it into fragments would put the stress in a different place in
       each language. */}
-  <p set:html={t("howItWorks.storage.body")} />
+  <p set:html={t("howItWorks.storage.body", { privacyHref: routes.privacy[lang] })} />
 
   <h2>{t("howItWorks.limits.title")}</h2>
   <ul class="limits">

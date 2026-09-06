@@ -15,7 +15,7 @@ import { defaultLang, type Lang } from "./config";
 const en = {
   "site.title": "YT Transcriber",
   "site.description":
-    "Read any YouTube video as text. Transcript and translation, timed to the player. No account, nothing stored.",
+    "Read any YouTube video as text: timestamps, dual view and exports. No signup, and the history stays in your browser.",
 
   "nav.home": "YT Transcriber — home",
   "nav.howItWorks": "How it works",
@@ -24,12 +24,12 @@ const en = {
 
   "hero.lead": "Read any",
   "hero.accent": "YouTube video",
-  "hero.subtext": "Transcript, translation, and every line timed to the player.",
+  "hero.subtext": "Timestamped text, translation, and reading that follows the video.",
 
   "badge.noSignup.title": "No signup",
   "badge.noSignup.body": "No account needed",
   "badge.noDatabase.title": "No database",
-  "badge.noDatabase.body": "The server keeps nothing",
+  "badge.noDatabase.body": "Processed, not stored",
   "badge.localHistory.title": "Local history",
   "badge.localHistory.body": "This browser only",
   "badge.free.title": "Free",
@@ -67,9 +67,6 @@ const en = {
   "error.PROVIDER_UNAVAILABLE.title": "Service unavailable",
   "error.PROVIDER_UNAVAILABLE.body": "One of the external providers is not responding right now.",
   "error.PROVIDER_UNAVAILABLE.action": "Retry",
-  // Not in ErrorCode on this branch yet -- the backend's processing budget is being built
-  // separately. Translated here so the strings are waiting when it lands, rather than being the
-  // thing that gets noticed in English on a Spanish page.
   "error.PROCESSING_TIMEOUT.title": "This took too long",
   "error.PROCESSING_TIMEOUT.body":
     "Processing hit its time limit. Try a shorter video, or come back in a little while.",
@@ -181,7 +178,7 @@ const en = {
     "The result comes back timed: click any line to jump there, and the line being spoken lights up as it goes.",
   "howItWorks.storage.title": "Where it is kept",
   "howItWorks.storage.body":
-    "On the server, nowhere: there is no database, and once the request is answered no copy of the text remains. What is kept is a history of the last 5 videos in <em>this</em> browser's local storage, with the full result inside, so you can reopen them without running anything again. It never leaves your machine, and the “Clear history” button on the home page removes it for good.",
+    "There is no database of results. The server processes the content and tries to clean up the temporary files Whisper uses when it finishes. A history of the last 5 videos is kept in <em>this</em> browser's local storage, with the full result inside, so you can reopen one without running anything again. The “Clear history” button removes those local copies. Translation goes through DeepL, and technical records may exist: see <a href=\"{privacyHref}\">Privacy</a> for how the data is handled.",
   "howItWorks.limits.title": "Limits",
   "howItWorks.limits.1": "Videos up to 20 minutes.",
   "howItWorks.limits.2": "A limited number of transcriptions and audio minutes per session.",
@@ -192,11 +189,17 @@ const en = {
 
   "privacy.title": "Privacy",
   "privacy.p1":
-    "YT Transcriber needs no signup and no account. We do not keep the video, the audio, the transcript or the translation once the response has reached your browser.",
+    "YT Transcriber needs no signup and no account, and keeps no database of transcripts. The server processes captions and text in memory; when it needs Whisper it uses temporary audio and transcript files, which it tries to delete once processing ends. A failed cleanup can leave files behind on the server.",
   "privacy.p2":
-    "There are no tracking cookies, or cookies of any other kind. To keep per-session usage in check and stop the service being abused, the backend issues an anonymous session identifier that your browser sends back with each request — it does not identify who you are, it only stops one session from taking more than its share.",
+    "The history keeps up to five complete results in this browser's local storage. You can remove them with “Clear history” on the home page. A session identifier is also kept in sessionStorage, which the browser sends to the API so the usage limits can be applied; it is not an account.",
   "privacy.p3":
-    "As with any web service, minimal technical records remain (the request's IP address, for one), used only to prevent abuse and never to build a profile.",
+    "If the target language differs from the captions or the transcript, the text is sent to DeepL to be translated. Whisper runs on the server, not in your browser. The player loads content from YouTube and the fonts are requested from Google Fonts; those services receive connection data and may apply their own cookie and privacy policies.",
+  "privacy.p4":
+    "The API and the infrastructure may produce technical records of requests, such as the IP address, the session identifier and errors. Having no database does not mean there are no logs or third-party processing. Do not send confidential content. If you share a link to a moment, it may carry the full result so someone else can open it without running the transcription again.",
+  "howItWorks.description":
+    "From a URL to a timed transcript: captions, Whisper when they are missing, and translation through DeepL. The flow and its limits.",
+  "privacy.description":
+    "How videos and text are processed, what is kept in your browser, and which external services YT Transcriber uses.",
 
   "notFound.title": "This page does not exist",
   "notFound.description": "The page you are looking for is not here.",
@@ -209,7 +212,7 @@ export type UiKey = keyof typeof en;
 const es: Record<UiKey, string> = {
   "site.title": "YT Transcriber",
   "site.description":
-    "Lee cualquier vídeo de YouTube como texto. Transcripción y traducción, sincronizadas con el reproductor. Sin registro y sin almacenamiento.",
+    "Transcribe y traduce vídeos de YouTube con marcas de tiempo, vista dual y exportaciones. Sin registro e historial en tu navegador.",
 
   "nav.home": "YT Transcriber — inicio",
   "nav.howItWorks": "Cómo funciona",
@@ -218,12 +221,12 @@ const es: Record<UiKey, string> = {
 
   "hero.lead": "Lee cualquier",
   "hero.accent": "vídeo de YouTube",
-  "hero.subtext": "Transcripción, traducción y cada línea sincronizada con el reproductor.",
+  "hero.subtext": "Texto con marcas de tiempo, traducción y lectura sincronizada.",
 
   "badge.noSignup.title": "Sin registro",
   "badge.noSignup.body": "No hace falta cuenta",
   "badge.noDatabase.title": "Sin base de datos",
-  "badge.noDatabase.body": "El servidor no guarda nada",
+  "badge.noDatabase.body": "Procesamiento temporal",
   "badge.localHistory.title": "Historial local",
   "badge.localHistory.body": "Solo en este navegador",
   "badge.free.title": "Gratis",
@@ -373,7 +376,7 @@ const es: Record<UiKey, string> = {
     "El resultado llega con marcas de tiempo: pulsa una línea para saltar ahí, y la que suena se va iluminando mientras avanza.",
   "howItWorks.storage.title": "Dónde se guarda",
   "howItWorks.storage.body":
-    "En el servidor, en ningún sitio: no hay base de datos, y una vez respondida la petición no queda copia del texto. Lo que sí se guarda es un historial de los últimos 5 vídeos en el almacenamiento local de <em>este</em> navegador, con el resultado completo dentro, para que puedas volver a abrirlos sin repetir el proceso. Nunca sale de tu equipo, y el botón «Borrar historial» de la portada lo elimina del todo.",
+    "No hay una base de datos de resultados. El servidor procesa el contenido e intenta limpiar los archivos temporales usados por Whisper al finalizar. El historial de los últimos 5 vídeos se guarda en el almacenamiento local de <em>este</em> navegador, con el resultado completo, para abrirlo sin repetir el proceso. El botón «Borrar historial» elimina esas copias locales. La traducción utiliza DeepL y pueden existir registros técnicos: consulta <a href=\"{privacyHref}\">Privacidad</a> para conocer el tratamiento de los datos.",
   "howItWorks.limits.title": "Límites",
   "howItWorks.limits.1": "Vídeos de hasta 20 minutos.",
   "howItWorks.limits.2": "Un número limitado de transcripciones y de minutos de audio por sesión.",
@@ -384,11 +387,17 @@ const es: Record<UiKey, string> = {
 
   "privacy.title": "Privacidad",
   "privacy.p1":
-    "YT Transcriber no requiere registro ni cuenta. No guardamos el vídeo, el audio, la transcripción ni la traducción una vez que la respuesta llega a tu navegador.",
+    "YT Transcriber no requiere registro ni cuenta y no utiliza una base de datos de transcripciones. El servidor procesa subtítulos y texto en memoria; cuando necesita Whisper, utiliza archivos temporales de audio y transcripción cuya eliminación se intenta al finalizar el procesamiento. Un fallo de limpieza puede dejar archivos pendientes en el servidor.",
   "privacy.p2":
-    "No usamos cookies de seguimiento ni de ningún otro tipo. Para controlar el uso por sesión y evitar abuso del servicio, el backend asigna un identificador de sesión anónimo que tu navegador reenvía en cada petición — no identifica quién eres, solo evita que una misma sesión abuse del servicio.",
+    "El historial guarda hasta cinco resultados completos en el almacenamiento local de este navegador. Puedes eliminarlos con «Borrar historial» en la portada. También se conserva un identificador de sesión en sessionStorage, que el navegador envía a la API para aplicar los límites de uso; no es una cuenta.",
   "privacy.p3":
-    "Como en cualquier servicio web, quedan registros técnicos mínimos (por ejemplo, la IP de la petición) usados solo para prevenir abuso, nunca para construir un perfil.",
+    "Si el idioma de destino es distinto al de los subtítulos o la transcripción, el texto se envía a DeepL para traducirlo. Whisper se ejecuta en el servidor, no en tu navegador. El reproductor carga contenido de YouTube y las fuentes se solicitan a Google Fonts; estos servicios reciben datos de conexión y pueden aplicar sus propias políticas de cookies y privacidad.",
+  "privacy.p4":
+    "La API y la infraestructura pueden generar registros técnicos de las peticiones, como la dirección IP, el identificador de sesión y errores. No tener base de datos no significa que no existan registros o procesamiento por terceros. No envíes contenido confidencial. Si compartes un enlace a un momento, este puede incluir el resultado completo para que otra persona lo abra sin repetir la transcripción.",
+  "howItWorks.description":
+    "De una URL a una transcripción sincronizada: subtítulos, Whisper cuando hace falta y traducción con DeepL. Consulta el flujo y sus límites.",
+  "privacy.description":
+    "Cómo se procesan los vídeos y textos, qué se guarda en tu navegador y qué servicios externos utiliza YT Transcriber.",
 
   "notFound.title": "Esta página no existe",
   "notFound.description": "La página que buscas no existe.",

@@ -169,6 +169,19 @@ describe("createTranscriptionStream", () => {
     expect(error.retryable).toBe(true);
   });
 
+  it("surfaces a processing deadline as a retryable error and closes the stream", () => {
+    const onError = vi.fn();
+    createTranscriptionStream({ youtubeUrl: "https://youtu.be/x", targetLanguage: "es" }, {
+      onStage: vi.fn(), onResult: vi.fn(), onError,
+    });
+    const body: ErrorResponseDto = {
+      code: "PROCESSING_TIMEOUT", message: "Deadline exceeded", retryable: true, requestId: "deadline-1",
+    };
+    latestSource().emit("error", JSON.stringify(body));
+    expect(onError).toHaveBeenCalledExactlyOnceWith(new ApiError(body));
+    expect(latestSource().closed).toBe(true);
+  });
+
   it("returns a function that closes the underlying connection", () => {
     const close = createTranscriptionStream({ youtubeUrl: "https://youtu.be/x", targetLanguage: "es" }, {
       onStage: vi.fn(),

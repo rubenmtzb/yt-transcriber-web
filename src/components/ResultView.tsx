@@ -13,10 +13,11 @@ import {
   downloadTextFile,
   downloadBlob,
   formatTimestamp,
+  findActiveSegment,
   type SegmentField,
 } from "../lib/segments";
 import { buildShareUrl } from "../lib/share";
-import { renderQuoteCard, type QuoteCardMode } from "../lib/quoteCard";
+import type { QuoteCardMode } from "../lib/quoteCard";
 import { useNotice } from "../hooks/useNotice";
 import { useTranscriptShortcuts } from "../hooks/useTranscriptShortcuts";
 import { useTranslations, type Translate } from "../i18n/ui";
@@ -115,6 +116,9 @@ export default function ResultView({ lang, result, onReset, initialSeekMs, onPos
       const mode: QuoteCardMode =
         activeTabRef.current === "translation" ? "translated" : activeTabRef.current === "dual" ? "dual" : "source";
       try {
+        // Imported at the point of use: the card is drawn on a canvas nobody touches unless they
+        // ask for one, and bundling it into the island makes every reader pay for it.
+        const { renderQuoteCard } = await import("../lib/quoteCard");
         const blob = await renderQuoteCard({ segment, videoTitle: result.video.title, mode });
         downloadBlob(blob, `${t("file.quote")}-${result.video.id}-${segment.sequence}.png`);
         notify(t("result.imageSaved"));
@@ -151,16 +155,10 @@ export default function ResultView({ lang, result, onReset, initialSeekMs, onPos
   const targetLanguageLabel = languageLabel(result.targetLanguage);
   const sourceLanguageLabel = languageLabel(result.sourceLanguage);
 
-  const activeSegment = useMemo<SegmentDto | null>(() => {
-    let active: SegmentDto | null = null;
-    for (const segment of result.segments) {
-      if (segment.startMs > currentMs) {
-        break;
-      }
-      active = segment;
-    }
-    return active;
-  }, [result.segments, currentMs]);
+  const activeSegment = useMemo(
+    () => findActiveSegment(result.segments, currentMs),
+    [result.segments, currentMs],
+  );
 
   const loopSegment = useMemo(() => {
     if (loopSequence === null) {

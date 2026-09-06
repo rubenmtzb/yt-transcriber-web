@@ -15,7 +15,8 @@
 ## What it does
 
 Paste a YouTube URL, pick a language, and read the video as text while it plays. No account, no
-signup, nothing stored on a server.
+signup or transcript database. Results are kept in browser history; processing uses server memory
+and temporary files. Translation sends text to DeepL, and infrastructure may retain technical logs.
 
 <img src="docs/demo.gif" alt="Pasting a YouTube URL and getting a timed, translated transcript back" width="100%">
 
@@ -37,7 +38,10 @@ actually said.
 - Embedded player with custom controls. The line being spoken stays highlighted and in view, and
   clicking any line seeks the video to it.
 - Per-line actions: loop it, copy a deep link to that moment
-  (`?v=<id>&t=<seconds>&lang=<code>`), or export it as a quote-card image.
+  (`?v=<id>&t=<seconds>&lang=<code>`), or export it as a quote-card image. The quote-card renderer
+  loads only when requested, not on the initial page load.
+- The line being read is found by binary search, so it lands on boundaries and during gaps without
+  rescanning the transcript on every playback update.
 - Keyboard shortcuts: space to play, arrows to seek and move between lines, `M` to mute, `L` to loop.
 - Recent history in `localStorage`, so reopening a result costs nothing against the rate limit.
 - English and Spanish, on real routes (`/` and `/es/`) rather than a client-side toggle.

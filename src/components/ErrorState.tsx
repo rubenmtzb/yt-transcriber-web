@@ -14,6 +14,7 @@ const ERROR_TONES: Record<ErrorCode, "danger" | "warning" | "accent"> = {
   VIDEO_TOO_LONG: "warning",
   RATE_LIMITED: "accent",
   PROVIDER_UNAVAILABLE: "danger",
+  PROCESSING_TIMEOUT: "warning",
   TRANSLATION_QUOTA_EXCEEDED: "warning",
   INTERNAL_ERROR: "danger",
 };
